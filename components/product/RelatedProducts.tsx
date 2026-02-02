@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getRelatedProducts } from "@/app/actions/product-actions";
 import { ProductCard } from "@/components/ProductCard";
 import { Product } from "@/lib/types";
 
@@ -8,15 +8,9 @@ interface RelatedProductsProps {
 }
 
 export async function RelatedProducts({ categoryId, currentProductId }: RelatedProductsProps) {
-    const supabase = await createClient();
+    const result = await getRelatedProducts(categoryId, currentProductId);
 
-    const { data: products } = await supabase
-        .from('products')
-        .select('*')
-        .eq('category_id', categoryId)
-        .neq('id', currentProductId)
-        .eq('is_active', true)
-        .limit(4);
+    const products = result.success ? result.data : [];
 
     if (!products || products.length === 0) {
         return null;

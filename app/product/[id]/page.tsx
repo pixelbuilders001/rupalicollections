@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getProductById } from "@/app/actions/product-actions";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductInfo } from "@/components/product/ProductInfo";
 import { RelatedProducts } from "@/components/product/RelatedProducts";
@@ -11,19 +11,13 @@ interface ProductPageProps {
 
 export default async function ProductPage({ params }: ProductPageProps) {
     const { id } = await params;
-    const supabase = await createClient();
+    const result = await getProductById(id);
 
-    const { data: product, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-    if (error || !product) {
+    if (!result.success || !result.data) {
         notFound();
     }
 
-    const typedProduct = product as Product;
+    const typedProduct = result.data;
 
     return (
         <div className="container mx-auto px-4 py-8">

@@ -6,7 +6,7 @@ import { X, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
+import { getCategories } from "@/app/actions/product-actions";
 import { useEffect } from "react";
 
 interface FilterSheetProps {
@@ -24,22 +24,16 @@ export function FilterSheet({
 }: FilterSheetProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [categoriesList, setCategoriesList] = useState<any[]>([]);
-    const supabase = createClient();
 
     useEffect(() => {
         const fetchCategories = async () => {
-            const { data } = await supabase
-                .from('categories')
-                .select('id, name, slug')
-                .eq('is_active', true)
-                .order('order');
-
-            if (data) {
-                setCategoriesList(data);
+            const result = await getCategories();
+            if (result.success && result.data) {
+                setCategoriesList(result.data);
             }
         };
         fetchCategories();
-    }, [supabase]);
+    }, []);
 
     return (
         <>

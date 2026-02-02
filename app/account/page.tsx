@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
+import { getUserProfile, updateUserProfile } from "@/app/actions/user-actions";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
@@ -45,31 +46,15 @@ export default function AccountPage() {
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [formData, setFormData] = useState({ name: "", phone: "" });
     const [saving, setSaving] = useState(false);
-    const supabase = createClient();
-
     useEffect(() => {
         const getUser = async () => {
-            const { data: { user }, error } = await supabase.auth.getUser();
-            if (error || !user) {
+            const result = await getUserProfile();
+            if (!result.success || !result.data) {
                 router.push("/login");
                 return;
             }
 
-            // Fetch generic profile data from public.profiles
-            const { data: profileData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-
-            const profile = {
-                id: user.id,
-                email: user.email,
-                name: profileData?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || "Rupali Guest",
-                avatar_url: profileData?.avatar_url || user.user_metadata?.avatar_url,
-                phone: profileData?.phone_number || user.phone || user.user_metadata?.phone || ""
-            };
-
+            const profile = result.data;
             setUser(profile);
             setFormData({
                 name: profile.name || "",
@@ -79,10 +64,10 @@ export default function AccountPage() {
         };
 
         getUser();
-    }, [router, supabase]);
+    }, [router]);
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
+        await createClient().auth.signOut();
         useStore.getState().clearCart();
         router.refresh();
         router.push("/login");
@@ -93,21 +78,17 @@ export default function AccountPage() {
         setSaving(true);
 
         const updates = {
-            id: user.id,
-            email: user.email,
             full_name: formData.name,
             phone_number: formData.phone,
-            avatar_url: user.avatar_url,
-            updated_at: new Date().toISOString(),
         };
 
-        const { error } = await supabase.from('profiles').upsert(updates);
+        const result = await updateUserProfile(updates);
 
-        if (!error) {
+        if (result.success) {
             setUser(prev => prev ? ({ ...prev, name: formData.name, phone: formData.phone }) : null);
             setIsEditOpen(false);
         } else {
-            console.error("Error updating profile:", error);
+            console.error("Error updating profile:", result.error);
             alert("Failed to update profile. Please try again.");
         }
         setSaving(false);

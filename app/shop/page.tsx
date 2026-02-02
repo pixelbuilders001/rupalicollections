@@ -13,7 +13,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SortOption, Product } from "@/lib/types";
-import { createClient } from "@/lib/supabase/client";
+import { getCategories, getProducts } from "@/app/actions/product-actions";
 
 function ShopContent() {
     const searchParams = useSearchParams();
@@ -26,43 +26,24 @@ function ShopContent() {
     const [productsList, setProductsList] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const supabase = createClient();
-
     useEffect(() => {
         const fetchCategories = async () => {
-            const { data } = await supabase
-                .from('categories')
-                .select('id, name, slug')
-                .eq('is_active', true);
-            if (data) setCategories(data);
+            const result = await getCategories();
+            if (result.success && result.data) {
+                setCategories(result.data);
+            }
         };
         fetchCategories();
-    }, [supabase]);
+    }, []);
 
     useEffect(() => {
-        const fetchProducts = async () => {
+        const fetchProductsByFilter = async () => {
             setLoading(true);
             try {
-                let query = supabase
-                    .from('products')
-                    .select('*')
-                    .eq('is_active', true);
-
-                if (selectedCategory) {
-                    const { data: catData } = await supabase
-                        .from('categories')
-                        .select('id')
-                        .eq('slug', selectedCategory)
-                        .single();
-
-                    if (catData) {
-                        query = query.eq('category_id', catData.id);
-                    }
+                const result = await getProducts({ categorySlug: selectedCategory });
+                if (result.success && result.data) {
+                    setProductsList(result.data);
                 }
-
-                const { data, error } = await query;
-                if (error) throw error;
-                if (data) setProductsList(data);
             } catch (err) {
                 console.error("Error fetching products:", err);
             } finally {
@@ -70,8 +51,8 @@ function ShopContent() {
             }
         };
 
-        fetchProducts();
-    }, [selectedCategory, supabase]);
+        fetchProductsByFilter();
+    }, [selectedCategory]);
 
     const activeCategoryName = useMemo(() => {
         if (!selectedCategory) return "All Collection";

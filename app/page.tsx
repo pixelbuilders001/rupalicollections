@@ -7,9 +7,9 @@ import { ArrowRight, Star, Truck, RefreshCw, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { products, categories as fallbackCategories } from "@/lib/data";
-import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { DBCategory, Product } from "@/lib/types";
+import { getCategories, getTrendingProducts, getNewArrivals } from "@/app/actions/product-actions";
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -23,66 +23,36 @@ export default function Home() {
   const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
-  const supabase = createClient();
-
   useEffect(() => {
-    const fetchCategories = async () => {
+    const loadHomeData = async () => {
       try {
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*')
-          .eq('is_active', true)
-          .order('order');
+        const [categoriesRes, trendingRes, arrivalsRes] = await Promise.all([
+          getCategories(),
+          getTrendingProducts(4),
+          getNewArrivals(4)
+        ]);
 
-        if (error) throw error;
+        if (categoriesRes.success && categoriesRes.data) {
+          setCategories(categoriesRes.data);
+        }
 
-        if (data && data.length > 0) {
-          const mappedCategories = data.map(cat => ({
-            id: cat.id,
-            name: cat.name,
-            image: cat.image_url,
-            slug: cat.slug
-          }));
-          setCategories(mappedCategories);
+        if (trendingRes.success && trendingRes.data) {
+          setTrendingProducts(trendingRes.data);
+        }
+
+        if (arrivalsRes.success && arrivalsRes.data) {
+          setNewArrivals(arrivalsRes.data);
         }
       } catch (err) {
-        console.error("Error fetching categories:", err);
+        console.error("Error loading home data:", err);
       } finally {
         setCategoriesLoading(false);
-      }
-    };
-
-    const fetchProducts = async () => {
-      try {
-        // Trending = Featured
-        const { data: trending } = await supabase
-          .from('products')
-          .select('*')
-          .eq('is_active', true)
-          .eq('is_featured', true)
-          .limit(4);
-
-        if (trending) setTrendingProducts(trending as Product[]);
-
-        // New Arrivals = Latest created
-        const { data: latest } = await supabase
-          .from('products')
-          .select('*')
-          .eq('is_active', true)
-          .order('created_at', { ascending: false })
-          .limit(4);
-
-        if (latest) setNewArrivals(latest as Product[]);
-      } catch (err) {
-        console.error("Error fetching homepage products:", err);
-      } finally {
         setProductsLoading(false);
       }
     };
 
-    fetchCategories();
-    fetchProducts();
-  }, [supabase]);
+    loadHomeData();
+  }, []);
 
   return (
     <div className="flex flex-col gap-10 pb-10">

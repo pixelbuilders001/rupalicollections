@@ -8,6 +8,7 @@ import { useStore } from "@/lib/store";
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getCartServerAction } from "@/app/actions/cart-actions";
+import { getUserProfile } from "@/app/actions/user-actions";
 
 export function Navbar() {
     const cartCount = useStore((state) => state.cartCount());
@@ -35,17 +36,9 @@ export function Navbar() {
         setIsMounted(true);
 
         const initAuth = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                // Fetch profile
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('avatar_url')
-                    .eq('id', user.id)
-                    .single();
-
-                setAvatarUrl(profile?.avatar_url || user.user_metadata?.avatar_url || null);
-
+            const result = await getUserProfile();
+            if (result.success && result.data) {
+                setAvatarUrl(result.data.avatar_url || null);
                 // Sync cart
                 syncCart();
             }

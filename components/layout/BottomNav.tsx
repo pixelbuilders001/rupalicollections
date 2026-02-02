@@ -9,6 +9,7 @@ import { useStore } from "@/lib/store";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
+import { getUserProfile } from "@/app/actions/user-actions";
 
 export function BottomNav() {
     const pathname = usePathname();
@@ -20,21 +21,14 @@ export function BottomNav() {
     useEffect(() => {
         setIsMounted(true);
 
-        const getUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                // Check profiles table first
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('avatar_url')
-                    .eq('id', user.id)
-                    .single();
-
-                setAvatarUrl(profile?.avatar_url || user.user_metadata?.avatar_url || null);
+        const initAuth = async () => {
+            const result = await getUserProfile();
+            if (result.success && result.data) {
+                setAvatarUrl(result.data.avatar_url || null);
             }
         };
 
-        getUser();
+        initAuth();
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             if (session?.user) {
