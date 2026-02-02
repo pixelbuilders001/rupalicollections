@@ -36,7 +36,6 @@ export function ProductInfo({ product }: ProductInfoProps) {
         const result = await addToCartServerAction(product.id, quantity);
         console.log("Cart API result (via Server Action):", result);
         if (result.success) {
-            console.log("Cart API success (via Server Action):", result.data);
             alert("Added to cart!");
         } else {
             console.warn("Cart API skipped or failed (via Server Action):", result.error);
