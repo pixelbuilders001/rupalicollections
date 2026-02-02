@@ -1,29 +1,52 @@
-import { products } from "@/lib/data";
+import { createClient } from "@/lib/supabase/server";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductInfo } from "@/components/product/ProductInfo";
+import { RelatedProducts } from "@/components/product/RelatedProducts";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { Product } from "@/lib/types";
 
 interface ProductPageProps {
     params: Promise<{ id: string }>;
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-    const { id } = await params; // Next.js 15+ params are promises? Actually Next 15 yes, Next 14 maybe no.
-    // The user said Next.js latest (16.1.6). In Next 15/16 params are Promises.
+    const { id } = await params;
+    const supabase = await createClient();
 
-    const product = products.find((p) => p.id === id);
+    const { data: product, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-    if (!product) {
+    if (error || !product) {
         notFound();
     }
+
+    const typedProduct = product as Product;
 
     return (
         <div className="container mx-auto px-4 py-8">
             <div className="grid gap-8 md:grid-cols-2 lg:gap-16">
-                <ProductGallery images={product.images} />
-                <ProductInfo product={product} />
+                <ProductGallery images={typedProduct.images} thumbnail={typedProduct.thumbnail_url} />
+                <ProductInfo product={typedProduct} />
             </div>
+
+            {/* Description Section */}
+            {typedProduct.description && (
+                <div className="mt-16 border-t pt-10">
+                    <h2 className="font-serif text-2xl font-bold mb-4">Product Description</h2>
+                    <div className="prose max-w-none text-muted-foreground whitespace-pre-line">
+                        {typedProduct.description}
+                    </div>
+                </div>
+            )}
+
+            {/* Related Products Section */}
+            <RelatedProducts
+                categoryId={typedProduct.category_id}
+                currentProductId={typedProduct.id}
+            />
         </div>
     );
 }

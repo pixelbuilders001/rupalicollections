@@ -6,17 +6,73 @@ import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2, ArrowRight } from "lucide-react";
 import { useStore } from "@/lib/store";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { getCartServerAction, removeFromCartServerAction, updateCartQuantityServerAction } from "@/app/actions/cart-actions";
+import { CartItem } from "@/lib/types";
 
 export default function CartPage() {
-    const { items, updateQuantity, removeFromCart, cartTotal } = useStore();
+    const { items, cartTotal, setCartItems } = useStore();
     const [isMounted, setIsMounted] = useState(false);
+    const [loading, setLoading] = useState(true);
+
+    const fetchCart = useCallback(async () => {
+        try {
+            const result = await getCartServerAction();
+            console.log("Cart API result:", result);
+            if (result.success && result.data) {
+                const serverItems = result.data.map((item: any) => ({
+                    ...item.products,
+                    cartId: item.id,
+                    quantity: item.qty,
+                    price: item.price,
+                    selectedSize: item.size || "One Size",
+                    id: item.product_id
+                }));
+                setCartItems(serverItems);
+            } else {
+                setCartItems([]);
+            }
+        } catch (error) {
+            console.error("Failed to fetch cart:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [setCartItems]);
 
     useEffect(() => {
         setIsMounted(true);
-    }, []);
+        fetchCart();
+    }, [fetchCart]);
+
+    const handleUpdateQuantity = async (cartId: string, quantity: number) => {
+        if (quantity < 1) return;
+        const result = await updateCartQuantityServerAction(cartId, quantity);
+        if (result.success) {
+            fetchCart();
+        } else {
+            alert("Failed to update quantity");
+        }
+    };
+
+    const handleRemoveFromCart = async (cartId: string) => {
+        const result = await removeFromCartServerAction(cartId);
+        if (result.success) {
+            fetchCart();
+        } else {
+            alert("Failed to remove item");
+        }
+    };
 
     if (!isMounted) return null;
+
+    if (loading) {
+        return (
+            <div className="flex min-h-[60vh] flex-col items-center justify-center p-4">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+                <p className="mt-4 text-muted-foreground">Loading your cart...</p>
+            </div>
+        );
+    }
 
     if (items.length === 0) {
         return (
@@ -45,7 +101,7 @@ export default function CartPage() {
                         <div key={item.cartId} className="flex gap-4 rounded-lg border p-4 bg-card">
                             <div className="relative h-24 w-20 flex-shrink-0 overflow-hidden rounded-md border bg-muted">
                                 <Image
-                                    src={item.images[0]}
+                                    src={item.thumbnail_url || "https://images.unsplash.com/photo-1560393464-5c69a73c5770?q=80&w=800&auto=format&fit=crop"}
                                     alt={item.name}
                                     fill
                                     className="object-cover"
@@ -57,7 +113,7 @@ export default function CartPage() {
                                     <div className="flex justify-between">
                                         <h3 className="font-medium line-clamp-1">{item.name}</h3>
                                         <button
-                                            onClick={() => removeFromCart(item.cartId)}
+                                            onClick={() => handleRemoveFromCart(item.cartId)}
                                             className="text-muted-foreground hover:text-red-500"
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -71,14 +127,14 @@ export default function CartPage() {
                                     <div className="flex items-center rounded-md border h-8">
                                         <button
                                             className="h-8 w-8 flex items-center justify-center hover:bg-muted"
-                                            onClick={() => updateQuantity(item.cartId, item.quantity - 1)}
+                                            onClick={() => handleUpdateQuantity(item.cartId, item.quantity - 1)}
                                         >
                                             <Minus className="h-3 w-3" />
                                         </button>
                                         <span className="w-8 text-center text-sm">{item.quantity}</span>
                                         <button
                                             className="h-8 w-8 flex items-center justify-center hover:bg-muted"
-                                            onClick={() => updateQuantity(item.cartId, item.quantity + 1)}
+                                            onClick={() => handleUpdateQuantity(item.cartId, item.quantity + 1)}
                                         >
                                             <Plus className="h-3 w-3" />
                                         </button>

@@ -17,21 +17,28 @@ export function ProductCard({ product }: ProductCardProps) {
     const [isLiked, setIsLiked] = useState(false);
     const addToWishlist = useStore((state) => state.addToWishlist);
 
+    const [imgSrc, setImgSrc] = useState(product.thumbnail_url || "https://images.unsplash.com/photo-1560393464-5c69a73c5770?q=80&w=800&auto=format&fit=crop");
+
+    const displayPrice = product.sale_price || product.price;
+    const originalPrice = product.sale_price ? product.price : null;
+    const discount = (originalPrice && displayPrice) ? calculateDiscount(displayPrice, originalPrice) : null;
+
     return (
         <Link href={`/product/${product.id}`} className="group relative block overflow-hidden rounded-lg bg-card shadow-sm transition-all hover:shadow-md">
             {/* Image Container */}
             <div className="relative aspect-[3/4] overflow-hidden bg-muted">
                 <Image
-                    src={product.images[0]}
+                    src={imgSrc}
                     alt={product.name}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                     sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                    onError={() => setImgSrc("https://images.unsplash.com/photo-1560393464-5c69a73c5770?q=80&w=800&auto=format&fit=crop")}
                 />
                 {/* Discount Badge */}
-                {product.discount && (
+                {discount && (
                     <Badge className="absolute left-2 top-2 bg-red-800 text-white hover:bg-red-900">
-                        -{product.discount}%
+                        -{discount}%
                     </Badge>
                 )}
 
@@ -56,13 +63,13 @@ export function ProductCard({ product }: ProductCardProps) {
             {/* Info */}
             <div className="p-3">
                 <h3 className="line-clamp-1 text-sm font-medium text-foreground">{product.name}</h3>
-                <p className="text-xs text-muted-foreground">{product.category}</p>
+                <p className="text-xs text-muted-foreground">{product.sku || "Product"}</p>
 
                 <div className="mt-1 flex items-baseline gap-2">
-                    <span className="text-sm font-semibold">{formatPrice(product.price)}</span>
-                    {product.originalPrice && (
+                    <span className="text-sm font-semibold">{formatPrice(displayPrice)}</span>
+                    {originalPrice && (
                         <span className="text-xs text-muted-foreground line-through">
-                            {formatPrice(product.originalPrice)}
+                            {formatPrice(originalPrice)}
                         </span>
                     )}
                 </div>

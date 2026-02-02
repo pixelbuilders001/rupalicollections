@@ -6,7 +6,10 @@ import { motion } from "framer-motion";
 import { ArrowRight, Star, Truck, RefreshCw, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
-import { products, categories } from "@/lib/data";
+import { products, categories as fallbackCategories } from "@/lib/data";
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
+import { DBCategory, Product } from "@/lib/types";
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -15,8 +18,71 @@ const fadeIn = {
 };
 
 export default function Home() {
-  const trendingProducts = products.filter((p) => p.isTrending);
-  const newArrivals = products.filter((p) => p.isNew);
+  const [categories, setCategories] = useState<any[]>(fallbackCategories);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
+  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('is_active', true)
+          .order('order');
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          const mappedCategories = data.map(cat => ({
+            id: cat.id,
+            name: cat.name,
+            image: cat.image_url,
+            slug: cat.slug
+          }));
+          setCategories(mappedCategories);
+        }
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    const fetchProducts = async () => {
+      try {
+        // Trending = Featured
+        const { data: trending } = await supabase
+          .from('products')
+          .select('*')
+          .eq('is_active', true)
+          .eq('is_featured', true)
+          .limit(4);
+
+        if (trending) setTrendingProducts(trending as Product[]);
+
+        // New Arrivals = Latest created
+        const { data: latest } = await supabase
+          .from('products')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(4);
+
+        if (latest) setNewArrivals(latest as Product[]);
+      } catch (err) {
+        console.error("Error fetching homepage products:", err);
+      } finally {
+        setProductsLoading(false);
+      }
+    };
+
+    fetchCategories();
+    fetchProducts();
+  }, [supabase]);
 
   return (
     <div className="flex flex-col gap-10 pb-10">
@@ -66,24 +132,31 @@ export default function Home() {
           <h2 className="font-serif text-2xl font-bold text-foreground">Shop by Category</h2>
         </div>
         <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
-          {categories.map((category) => (
-            <Link
-              key={category.id}
-              href={`/shop?category=${category.slug}`}
-              className="relative aspect-[3/4] min-w-[140px] flex-shrink-0 snap-start overflow-hidden rounded-lg md:min-w-[200px]"
-            >
-              <Image
-                src={category.image}
-                alt={category.name}
-                fill
-                className="object-cover transition-transform hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-              <div className="absolute bottom-3 left-3 text-white">
-                <span className="font-medium text-lg">{category.name}</span>
-              </div>
-            </Link>
-          ))}
+          {categoriesLoading ? (
+            // Simple Loading Skeleton
+            [1, 2, 3, 4].map((i) => (
+              <div key={i} className="aspect-[3/4] min-w-[140px] flex-shrink-0 animate-pulse rounded-lg bg-secondary/50 md:min-w-[200px]" />
+            ))
+          ) : (
+            categories.map((category) => (
+              <Link
+                key={category.id}
+                href={`/shop?category=${category.slug}`}
+                className="relative aspect-[3/4] min-w-[140px] flex-shrink-0 snap-start overflow-hidden rounded-lg md:min-w-[200px]"
+              >
+                <Image
+                  src={category.image}
+                  alt={category.name}
+                  fill
+                  className="object-cover transition-transform hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                <div className="absolute bottom-3 left-3 text-white">
+                  <span className="font-medium text-lg">{category.name}</span>
+                </div>
+              </Link>
+            ))
+          )}
         </div>
       </section>
 
@@ -96,7 +169,9 @@ export default function Home() {
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-8">
-          {trendingProducts.slice(0, 4).map((product) => (
+          {productsLoading ? (
+            [1, 2, 3, 4].map(i => <div key={i} className="aspect-[3/4] animate-pulse rounded-lg bg-secondary/50" />)
+          ) : trendingProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
@@ -138,7 +213,9 @@ export default function Home() {
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-8">
-          {newArrivals.map((product) => (
+          {productsLoading ? (
+            [1, 2, 3, 4].map(i => <div key={i} className="aspect-[3/4] animate-pulse rounded-lg bg-secondary/50" />)
+          ) : newArrivals.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>

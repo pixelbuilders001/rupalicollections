@@ -6,7 +6,8 @@ import { X, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { categories } from "@/lib/data";
+import { createClient } from "@/lib/supabase/client";
+import { useEffect } from "react";
 
 interface FilterSheetProps {
     selectedCategory: string | null;
@@ -22,6 +23,23 @@ export function FilterSheet({
     setPriceRange,
 }: FilterSheetProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const [categoriesList, setCategoriesList] = useState<any[]>([]);
+    const supabase = createClient();
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            const { data } = await supabase
+                .from('categories')
+                .select('id, name, slug')
+                .eq('is_active', true)
+                .order('order');
+
+            if (data) {
+                setCategoriesList(data);
+            }
+        };
+        fetchCategories();
+    }, [supabase]);
 
     return (
         <>
@@ -48,7 +66,7 @@ export function FilterSheet({
                         >
                             All Products
                         </button>
-                        {categories.map((cat) => (
+                        {categoriesList.map((cat) => (
                             <button
                                 key={cat.id}
                                 onClick={() => setSelectedCategory(cat.slug)}
@@ -128,7 +146,7 @@ export function FilterSheet({
                                         >
                                             All
                                         </Badge>
-                                        {categories.map((cat) => (
+                                        {categoriesList.map((cat) => (
                                             <Badge
                                                 key={cat.id}
                                                 variant={selectedCategory === cat.slug ? "default" : "outline"}

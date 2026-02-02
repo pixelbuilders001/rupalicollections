@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Heart, Minus, Plus, ShoppingBag, Truck, Ruler } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
+import { addToCartServerAction } from "@/app/actions/cart-actions";
 
 interface ProductInfoProps {
     product: Product;
@@ -18,30 +19,46 @@ export function ProductInfo({ product }: ProductInfoProps) {
     const [quantity, setQuantity] = useState(1);
     const addToCart = useStore((state) => state.addToCart);
 
-    const handleAddToCart = () => {
-        if (!selectedSize) {
+    const displayPrice = product.sale_price || product.price;
+    const originalPrice = product.sale_price ? product.price : null;
+    const discount = originalPrice ? calculateDiscount(displayPrice, originalPrice) : null;
+
+    const handleAddToCart = async () => {
+        if (product.sizes && product.sizes.length > 0 && !selectedSize) {
             alert("Please select a size"); // Better UI for this later (toast)
             return;
         }
-        addToCart(product, quantity, selectedSize);
-        alert("Added to cart!"); // Better UI (toast)
+
+        // Local state update
+        addToCart(product, quantity, selectedSize || "One Size");
+
+        // API call (Server Action)
+        const result = await addToCartServerAction(product.id, quantity);
+        console.log("Cart API result (via Server Action):", result);
+        if (result.success) {
+            console.log("Cart API success (via Server Action):", result.data);
+            alert("Added to cart!");
+        } else {
+            console.warn("Cart API skipped or failed (via Server Action):", result.error);
+            alert("Added to cart!");
+        }
     };
 
     return (
         <div className="flex flex-col gap-6">
             <div>
                 <h1 className="font-serif text-3xl font-bold text-foreground">{product.name}</h1>
-                <p className="text-muted-foreground">{product.category}</p>
+                <p className="text-muted-foreground">Premium Indian Collection</p>
 
                 <div className="mt-4 flex items-end gap-3">
-                    <span className="text-2xl font-bold">{formatPrice(product.price)}</span>
-                    {product.originalPrice && (
+                    <span className="text-2xl font-bold">{formatPrice(displayPrice)}</span>
+                    {originalPrice && (
                         <>
                             <span className="text-lg text-muted-foreground line-through">
-                                {formatPrice(product.originalPrice)}
+                                {formatPrice(originalPrice)}
                             </span>
                             <Badge variant="destructive" className="ml-2">
-                                -{product.discount}% OFF
+                                -{discount}% OFF
                             </Badge>
                         </>
                     )}
@@ -52,31 +69,33 @@ export function ProductInfo({ product }: ProductInfoProps) {
             {/* Attributes */}
             <div className="space-y-4">
                 {/* Size */}
-                <div>
-                    <div className="flex justify-between mb-2">
-                        <span className="font-semibold">Select Size</span>
-                        <button className="flex items-center gap-1 text-xs text-primary underline">
-                            <Ruler className="h-3 w-3" /> Size Chart
-                        </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        {product.sizes.map((size) => (
-                            <button
-                                key={size}
-                                onClick={() => setSelectedSize(size)}
-                                className={cn(
-                                    "flex h-10 w-10 items-center justify-center rounded-full border text-sm transition-all",
-                                    selectedSize === size
-                                        ? "border-primary bg-primary text-primary-foreground"
-                                        : "border-input bg-background hover:border-primary"
-                                )}
-                            >
-                                {size}
+                {product.sizes && product.sizes.length > 0 && (
+                    <div>
+                        <div className="flex justify-between mb-2">
+                            <span className="font-semibold">Select Size</span>
+                            <button className="flex items-center gap-1 text-xs text-primary underline">
+                                <Ruler className="h-3 w-3" /> Size Chart
                             </button>
-                        ))}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {product.sizes.map((size) => (
+                                <button
+                                    key={size}
+                                    onClick={() => setSelectedSize(size)}
+                                    className={cn(
+                                        "flex h-10 w-10 items-center justify-center rounded-full border text-sm transition-all",
+                                        selectedSize === size
+                                            ? "border-primary bg-primary text-primary-foreground"
+                                            : "border-input bg-background hover:border-primary"
+                                    )}
+                                >
+                                    {size}
+                                </button>
+                            ))}
+                        </div>
+                        {!selectedSize && <p className="mt-1 text-xs text-red-500">Please select a size</p>}
                     </div>
-                    {!selectedSize && <p className="mt-1 text-xs text-red-500">Please select a size</p>}
-                </div>
+                )}
 
                 {/* Quantity */}
                 {/* Disabled for now, keep simple single add or simple counter */}
@@ -104,10 +123,10 @@ export function ProductInfo({ product }: ProductInfoProps) {
                     className="flex-1 gap-2"
                     size="lg"
                     onClick={handleAddToCart}
-                    disabled={!product.inStock}
+                    disabled={product.stock === 0}
                 >
                     <ShoppingBag className="h-5 w-5" />
-                    {product.inStock ? "Add to Cart" : "Out of Stock"}
+                    {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
                 </Button>
 
                 <Button variant="outline" size="icon" className="h-11 w-11">
@@ -119,7 +138,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
             <div className="space-y-4 rounded-lg bg-secondary/20 p-4 text-sm">
                 <div className="flex gap-2">
                     <span className="font-semibold min-w-[80px]">Fabric:</span>
-                    <span>{product.fabric}</span>
+                    <span>{product.fabric || "Silk / Georgette Mix"}</span>
                 </div>
                 <div className="flex gap-2">
                     <span className="font-semibold min-w-[80px]">Fit:</span>
@@ -128,7 +147,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                 <div className="flex gap-2">
                     <span className="font-semibold min-w-[80px]">Delivery:</span>
                     <span className="flex items-center gap-1 text-green-600">
-                        <Truck className="h-3 w-3" /> Dispatched in 24 hours
+                        <Truck className="h-3 w-3" /> Dispatched in 2-3 business days
                     </span>
                 </div>
             </div>

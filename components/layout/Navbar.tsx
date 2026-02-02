@@ -5,15 +5,70 @@ import Image from "next/image";
 import { ShoppingBag, Search, Heart, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { getCartServerAction } from "@/app/actions/cart-actions";
 
 export function Navbar() {
     const cartCount = useStore((state) => state.cartCount());
+    const setCartItems = useStore((state) => state.setCartItems);
     const [isMounted, setIsMounted] = useState(false);
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const supabase = createClient();
+
+    const syncCart = useCallback(async () => {
+        const result = await getCartServerAction();
+        if (result.success && result.data) {
+            const serverItems = result.data.map((item: any) => ({
+                ...item.products,
+                cartId: item.id,
+                quantity: item.qty,
+                price: item.price,
+                selectedSize: item.size || "One Size",
+                id: item.product_id
+            }));
+            setCartItems(serverItems);
+        }
+    }, [setCartItems]);
 
     useEffect(() => {
         setIsMounted(true);
-    }, []);
+
+        const initAuth = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                // Fetch profile
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('avatar_url')
+                    .eq('id', user.id)
+                    .single();
+
+                setAvatarUrl(profile?.avatar_url || user.user_metadata?.avatar_url || null);
+
+                // Sync cart
+                syncCart();
+            }
+        };
+
+        initAuth();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (session?.user) {
+                setAvatarUrl(session.user.user_metadata?.avatar_url || null);
+                if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+                    syncCart();
+                }
+            } else {
+                setAvatarUrl(null);
+                if (event === 'SIGNED_OUT') {
+                    useStore.getState().clearCart();
+                }
+            }
+        });
+
+        return () => subscription.unsubscribe();
+    }, [supabase]);
 
     return (
         <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-md">
@@ -57,11 +112,22 @@ export function Navbar() {
                     <Button variant="ghost" size="icon" className="hidden md:flex">
                         <Heart className="h-5 w-5" />
                     </Button>
-                    <Link href="/account">
-                        <Button variant="ghost" size="icon">
-                            <User className="h-5 w-5" />
+                    {/* <Link href="/account">
+                        <Button variant="ghost" size="icon" className="overflow-hidden">
+                            {avatarUrl ? (
+                                <div className="relative h-6 w-6 overflow-hidden rounded-full border border-border">
+                                    <Image
+                                        src={avatarUrl}
+                                        alt="Profile"
+                                        fill
+                                        className="object-cover"
+                                    />
+                                </div>
+                            ) : (
+                                <User className="h-5 w-5" />
+                            )}
                         </Button>
-                    </Link>
+                    </Link> */}
                     <Link href="/cart">
                         <Button variant="ghost" size="icon" className="relative">
                             <ShoppingBag className="h-5 w-5" />

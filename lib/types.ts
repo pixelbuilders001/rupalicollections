@@ -1,22 +1,38 @@
-export type Category = "Sarees" | "Kurtis" | "Lehengas" | "Dresses" | "Co-ords";
+export type Category = "Sarees" | "Kurtis" | "Lehengas" | "Dresses" | "Apparel" | "Jhumkas" | "Women Apparel";
+
+export interface DBCategory {
+    id: string;
+    name: string;
+    slug: string;
+    description?: string;
+    image_url: string;
+    is_active: boolean;
+    order: number;
+    created_at?: string;
+    updated_at?: string;
+}
 
 export interface Product {
     id: string;
     name: string;
-    description: string;
+    description?: string;
     price: number;
-    originalPrice?: number;
-    discount?: number;
-    images: string[];
-    category: Category;
-    sizes: string[];
-    colors: string[];
-    fabric: string;
-    isNew?: boolean;
-    isTrending?: boolean;
-    rating: number;
-    reviews: number;
-    inStock: boolean;
+    sale_price?: number;
+    currency: string;
+    category_id: string;
+    slug: string;
+    thumbnail_url: string;
+    images?: string[]; // Kept for frontend convenience if needed later
+    is_active: boolean;
+    is_featured: boolean;
+    stock: number;
+    sku?: string;
+    // Previous frontend specific fields kept as optional for transitions
+    sizes?: string[];
+    colors?: string[];
+    fabric?: string;
+    rating?: number;
+    reviews?: number;
 }
 
 export interface CartItem extends Product {

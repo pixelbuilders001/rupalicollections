@@ -6,11 +6,17 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ProductGalleryProps {
-    images: string[];
+    images?: string[];
+    thumbnail?: string;
 }
 
-export function ProductGallery({ images }: ProductGalleryProps) {
+export function ProductGallery({ images = [], thumbnail }: ProductGalleryProps) {
+    const displayImages = images.length > 0 ? images : (thumbnail ? [thumbnail] : []);
     const [selectedImage, setSelectedImage] = useState(0);
+
+    if (displayImages.length === 0) {
+        return <div className="aspect-[3/4] w-full rounded-lg bg-muted flex items-center justify-center text-muted-foreground">No Image Available</div>;
+    }
 
     return (
         <div className="flex flex-col gap-4">
@@ -26,7 +32,7 @@ export function ProductGallery({ images }: ProductGalleryProps) {
                         className="relative h-full w-full"
                     >
                         <Image
-                            src={images[selectedImage]}
+                            src={displayImages[selectedImage]}
                             alt="Product Image"
                             fill
                             className="object-cover"
@@ -37,25 +43,27 @@ export function ProductGallery({ images }: ProductGalleryProps) {
             </div>
 
             {/* Thumbnails */}
-            <div className="flex gap-4 overflow-x-auto pb-2">
-                {images.map((img, index) => (
-                    <button
-                        key={index}
-                        onClick={() => setSelectedImage(index)}
-                        className={cn(
-                            "relative aspect-square w-20 flex-shrink-0 overflow-hidden rounded-md border-2 transition-all",
-                            selectedImage === index ? "border-primary" : "border-transparent"
-                        )}
-                    >
-                        <Image
-                            src={img}
-                            alt={`Product thumbnail ${index + 1}`}
-                            fill
-                            className="object-cover"
-                        />
-                    </button>
-                ))}
-            </div>
+            {displayImages.length > 1 && (
+                <div className="flex gap-4 overflow-x-auto pb-2">
+                    {displayImages.map((img, index) => (
+                        <button
+                            key={index}
+                            onClick={() => setSelectedImage(index)}
+                            className={cn(
+                                "relative aspect-square w-20 flex-shrink-0 overflow-hidden rounded-md border-2 transition-all",
+                                selectedImage === index ? "border-primary" : "border-transparent"
+                            )}
+                        >
+                            <Image
+                                src={img}
+                                alt={`Product thumbnail ${index + 1}`}
+                                fill
+                                className="object-cover"
+                            />
+                        </button>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

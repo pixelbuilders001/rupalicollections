@@ -7,21 +7,51 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useStore } from "@/lib/store";
 import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import Image from "next/image";
 
 export function BottomNav() {
     const pathname = usePathname();
     const cartCount = useStore((state) => state.cartCount());
     const [isMounted, setIsMounted] = useState(false);
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const supabase = createClient();
 
     useEffect(() => {
         setIsMounted(true);
-    }, []);
+
+        const getUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                // Check profiles table first
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('avatar_url')
+                    .eq('id', user.id)
+                    .single();
+
+                setAvatarUrl(profile?.avatar_url || user.user_metadata?.avatar_url || null);
+            }
+        };
+
+        getUser();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (session?.user) {
+                setAvatarUrl(session.user.user_metadata?.avatar_url || null);
+            } else {
+                setAvatarUrl(null);
+            }
+        });
+
+        return () => subscription.unsubscribe();
+    }, [supabase]);
 
     const navItems = [
         { href: "/", label: "Home", icon: Home },
         { href: "/shop", label: "Shop", icon: Grid },
         { href: "/cart", label: "Cart", icon: ShoppingBag, count: cartCount },
-        { href: "/account", label: "Profile", icon: User },
+        { href: "/account", label: "Profile", icon: User, avatar: avatarUrl },
     ];
 
     return (
@@ -37,13 +67,27 @@ export function BottomNav() {
                             className="relative flex flex-col items-center justify-center py-2 px-4 w-16"
                         >
                             <div className="relative z-10">
-                                <item.icon
-                                    className={cn(
-                                        "h-6 w-6 transition-all duration-300",
-                                        isActive ? "text-primary -translate-y-1" : "text-muted-foreground"
-                                    )}
-                                    strokeWidth={isActive ? 2.5 : 2}
-                                />
+                                {item.avatar ? (
+                                    <div className={cn(
+                                        "relative h-6 w-6 overflow-hidden rounded-full border transition-all duration-300",
+                                        isActive ? "border-primary -translate-y-1" : "border-border"
+                                    )}>
+                                        <Image
+                                            src={item.avatar}
+                                            alt="Profile"
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                ) : (
+                                    <item.icon
+                                        className={cn(
+                                            "h-6 w-6 transition-all duration-300",
+                                            isActive ? "text-primary -translate-y-1" : "text-muted-foreground"
+                                        )}
+                                        strokeWidth={isActive ? 2.5 : 2}
+                                    />
+                                )}
 
                                 {item.count ? (
                                     <motion.span
