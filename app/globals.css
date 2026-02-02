@@ -2,35 +2,35 @@
 
 :root {
   /* Elegant Indian Fashion Palette */
-  /* Soft Cream Background */
-  --background: #FFFAFA; 
-  /* Deep Charcoal/Brown Text */
-  --foreground: #2D2424; 
+  /* Soft Cream/White Background */
+  --background: #FFFCFA;
+  /* Deep Charcoal Text */
+  --foreground: #1A1A1A;
 
-  /* Muted Gold/Beige - Primary Actions */
-  --primary: #BC9C7C;
+  /* Vanya Gold - Primary Layout/Buttons */
+  --primary: #C5A059;
   --primary-foreground: #FFFFFF;
 
-  /* Soft Rose Mist - Secondary/Backgrounds */
-  --secondary: #F3E6E6;
-  --secondary-foreground: #4A3B3B;
+  /* Soft Pink Mist - Secondary/Icon Backgrounds */
+  --secondary: #FFF0F0;
+  --secondary-foreground: #C5A059;
 
-  /* Classic Gold - Accents/Highlights */
-  --accent: #D4AF37;
+  /* Classic Gold - Accents */
+  --accent: #C5A059;
   --accent-foreground: #FFFFFF;
 
   /* Borders / Muted Text */
-  --muted: #E8DQDQ; 
-  --muted-foreground: #7D6E6E;
+  --muted: #F5F0F0;
+  --muted-foreground: #8A8A8A;
 
   /* Cards */
   --card: #FFFFFF;
   --card-foreground: #2D2424;
 
   /* Borders */
-  --border: #E6D8D8;
-  --input: #E6D8D8;
-  --ring: #BC9C7C;
+  --border: #EADDD7;
+  --input: #EADDD7;
+  --ring: #C5A059;
 
   /* Radius */
   --radius: 0.5rem;
@@ -52,50 +52,48 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  
+
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
 
   --font-sans: var(--font-inter);
-  --font-serif: var(--font-playfair);
+  --font-serif: var(--font-cormorant-garamond);
 }
 
-@media (prefers-color-scheme: dark) {
-/* Dark mode optional but good to have prepared, strictly keeping to the request if mobile webview often defaults to one. 
-   For now, sticking to light/elegant as primary, but if user switches system theme, it shouldn't look broken. 
-   Overriding dark mode to stay light for this specific brand identity unless requested otherwise, 
-   or providing a dark luxury version. Let's do a dark luxury version.
-*/
-  :root {
-    --background: #1A1212; /* Dark Brown/Black */
-    --foreground: #F3E6E6; /* Soft Rose */
-    --card: #241A1A;
-    --card-foreground: #F3E6E6;
-    --border: #3D2E2E;
-    --input: #3D2E2E;
-    --muted: #3D2E2E;
-  }
-}
 
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
-  antialiased: true;
+  font-family: var(--font-sans), sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+
+  /* Smooth Micro-interactions */
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  .card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 }
 
 /* Custom Scrollbar for WebKit */
 ::-webkit-scrollbar {
   width: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--muted);
   border-radius: 10px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
 }

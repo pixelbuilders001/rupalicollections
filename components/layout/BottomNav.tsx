@@ -25,37 +25,76 @@ export function BottomNav() {
     ];
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t bg-background/80 px-2 pb-safe backdrop-blur-lg md:hidden">
-            {navItems.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        className={cn(
-                            "relative flex flex-col items-center justify-center p-2 text-xs font-medium transition-colors",
-                            isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                        )}
-                    >
-                        {isActive && (
-                            <motion.div
-                                layoutId="bottomNavIndicator"
-                                className="absolute -top-3 h-1 w-8 rounded-full bg-primary"
-                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                            />
-                        )}
-                        <div className="relative">
-                            <item.icon className={cn("h-6 w-6", isActive && "fill-current")} />
-                            {item.count ? (
-                                <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
-                                    {isMounted ? item.count : 0}
-                                </span>
-                            ) : null}
-                        </div>
-                        <span className="mt-1">{item.label}</span>
-                    </Link>
-                );
-            })}
+        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/80 backdrop-blur-xl border-t border-white/20 pb-safe pt-2">
+            <div className="flex items-center justify-around">
+                {navItems.map((item) => {
+                    const isActive = pathname === item.href;
+
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className="relative flex flex-col items-center justify-center py-2 px-4 w-16"
+                        >
+                            <div className="relative z-10">
+                                <item.icon
+                                    className={cn(
+                                        "h-6 w-6 transition-all duration-300",
+                                        isActive ? "text-primary -translate-y-1" : "text-muted-foreground"
+                                    )}
+                                    strokeWidth={isActive ? 2.5 : 2}
+                                />
+
+                                {item.count ? (
+                                    <motion.span
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground font-bold"
+                                    >
+                                        {isMounted ? item.count : 0}
+                                    </motion.span>
+                                ) : null}
+                            </div>
+
+                            {isActive && (
+                                <motion.div
+                                    layoutId="bottomNavIndicator"
+                                    className="absolute inset-0 flex flex-col items-center justify-end pb-1"
+                                    initial={false}
+                                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                >
+                                    {/* Soft glow separation or background pill if desired, here just a text label transition */}
+
+                                </motion.div>
+                            )}
+
+                            <motion.span
+                                animate={{
+                                    opacity: isActive ? 1 : 0.6,
+                                    scale: isActive ? 1 : 0.9,
+                                    fontWeight: isActive ? 600 : 400
+                                }}
+                                className={cn(
+                                    "text-[10px] mt-1 transition-colors duration-300",
+                                    isActive ? "text-primary" : "text-muted-foreground"
+                                )}
+                            >
+                                {item.label}
+                            </motion.span>
+
+                            {/* Active Indicator Dot */}
+                            {isActive && (
+                                <motion.div
+                                    layoutId="activeDot"
+                                    className="absolute top-0 h-1 w-8 rounded-b-full bg-primary"
+                                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                />
+                            )}
+                        </Link>
+                    );
+                })}
+            </div>
+            <div className="h-[env(safe-area-inset-bottom)]" />
         </div>
     );
 }

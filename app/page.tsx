@@ -104,27 +104,27 @@ export default function Home() {
 
       {/* Feature Banner */}
       <section className="my-6 bg-secondary/30 py-12">
-        <div className="container mx-auto flex flex-col items-center gap-6 px-4 text-center md:flex-row md:text-left md:justify-around">
+        <div className="container mx-auto grid grid-cols-3 gap-4 px-2 text-center md:flex md:flex-row md:text-left md:justify-around md:gap-6">
           <div className="flex flex-col items-center gap-2 md:items-start">
-            <div className="rounded-full bg-primary/10 p-3">
-              <Truck className="h-6 w-6 text-primary" />
+            <div className="rounded-full bg-primary/10 p-2 md:p-3">
+              <Truck className="h-5 w-5 md:h-6 md:w-6 text-primary" />
             </div>
-            <h3 className="font-semibold">Free Express Shipping</h3>
-            <p className="text-sm text-muted-foreground">On all orders above ₹2999</p>
+            <h3 className="font-semibold text-sm md:text-base">Free Shipping</h3>
+            <p className="hidden text-xs text-muted-foreground md:block">On all orders above ₹2999</p>
           </div>
           <div className="flex flex-col items-center gap-2 md:items-start">
-            <div className="rounded-full bg-primary/10 p-3">
-              <RefreshCw className="h-6 w-6 text-primary" />
+            <div className="rounded-full bg-primary/10 p-2 md:p-3">
+              <RefreshCw className="h-5 w-5 md:h-6 md:w-6 text-primary" />
             </div>
-            <h3 className="font-semibold">Easy Returns</h3>
-            <p className="text-sm text-muted-foreground">7-day hassle-free returns</p>
+            <h3 className="font-semibold text-sm md:text-base">Easy Returns</h3>
+            <p className="hidden text-xs text-muted-foreground md:block">7-day hassle-free returns</p>
           </div>
           <div className="flex flex-col items-center gap-2 md:items-start">
-            <div className="rounded-full bg-primary/10 p-3">
-              <ShieldCheck className="h-6 w-6 text-primary" />
+            <div className="rounded-full bg-primary/10 p-2 md:p-3">
+              <ShieldCheck className="h-5 w-5 md:h-6 md:w-6 text-primary" />
             </div>
-            <h3 className="font-semibold">Secure Payment</h3>
-            <p className="text-sm text-muted-foreground">100% secure checkout</p>
+            <h3 className="font-semibold text-sm md:text-base">Secure Payment</h3>
+            <p className="hidden text-xs text-muted-foreground md:block">100% secure checkout</p>
           </div>
         </div>
       </section>
