@@ -9,6 +9,8 @@ import { Heart, Minus, Plus, ShoppingBag, Truck, Ruler } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { addToCartServerAction } from "@/app/actions/cart-actions";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 interface ProductInfoProps {
     product: Product;
@@ -17,6 +19,7 @@ interface ProductInfoProps {
 export function ProductInfo({ product }: ProductInfoProps) {
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
     const [quantity, setQuantity] = useState(1);
+    const [isAdding, setIsAdding] = useState(false);
     const addToCart = useStore((state) => state.addToCart);
 
     const displayPrice = product.sale_price || product.price;
@@ -25,21 +28,33 @@ export function ProductInfo({ product }: ProductInfoProps) {
 
     const handleAddToCart = async () => {
         if (product.sizes && product.sizes.length > 0 && !selectedSize) {
-            alert("Please select a size"); // Better UI for this later (toast)
+            toast.error("Please select a size");
             return;
         }
 
-        // Local state update
-        addToCart(product, quantity, selectedSize || "One Size");
+        setIsAdding(true);
+        try {
+            // Always update local store for immediate UI feedback
+            addToCart(product, quantity, selectedSize || "One Size");
 
-        // API call (Server Action)
-        const result = await addToCartServerAction(product.id, quantity);
-        console.log("Cart API result (via Server Action):", result);
-        if (result.success) {
-            alert("Added to cart!");
-        } else {
-            console.warn("Cart API skipped or failed (via Server Action):", result.error);
-            alert("Added to cart!");
+            // Check auth status
+            const supabase = createClient();
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (session) {
+                // API call (Server Action) for logged in users
+                const result = await addToCartServerAction(product.id, quantity);
+                if (result.success) {
+                    toast.success("Added to cart & synced!");
+                } else {
+                    console.warn("Sync failed:", result.error);
+                    toast.success("Added to cart locally!");
+                }
+            } else {
+                toast.success("Added to cart!");
+            }
+        } finally {
+            setIsAdding(false);
         }
     };
 
@@ -123,6 +138,7 @@ export function ProductInfo({ product }: ProductInfoProps) {
                     size="lg"
                     onClick={handleAddToCart}
                     disabled={product.stock === 0}
+                    loading={isAdding}
                 >
                     <ShoppingBag className="h-5 w-5" />
                     {product.stock > 0 ? "Add to Cart" : "Out of Stock"}

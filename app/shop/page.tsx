@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SortOption, Product } from "@/lib/types";
 import { getCategories, getProducts } from "@/app/actions/product-actions";
+import { FullPageLoader } from "@/components/ui/FullPageLoader";
 
 function ShopContent() {
     const searchParams = useSearchParams();
@@ -123,11 +124,7 @@ function ShopContent() {
             <div className="flex gap-8">
                 <div className="w-full">
                     {loading ? (
-                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4">
-                            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                                <div key={i} className="aspect-[3/4] animate-pulse rounded-lg bg-secondary/50" />
-                            ))}
-                        </div>
+                        <FullPageLoader />
                     ) : filteredProducts.length === 0 ? (
                         <div className="flex h-64 flex-col items-center justify-center text-muted-foreground">
                             <p>No products found matching your criteria.</p>
@@ -148,7 +145,7 @@ function ShopContent() {
 
 export default function ShopPage() {
     return (
-        < Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
+        <Suspense fallback={<FullPageLoader />}>
             <ShopContent />
         </Suspense>
     )

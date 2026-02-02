@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import { getUserProfile, updateUserProfile } from "@/app/actions/user-actions";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import {
     Dialog,
     DialogContent,
@@ -46,6 +47,8 @@ export default function AccountPage() {
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [formData, setFormData] = useState({ name: "", phone: "" });
     const [saving, setSaving] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
     useEffect(() => {
         const getUser = async () => {
             const result = await getUserProfile();
@@ -67,31 +70,39 @@ export default function AccountPage() {
     }, [router]);
 
     const handleLogout = async () => {
-        await createClient().auth.signOut();
-        useStore.getState().clearCart();
-        router.refresh();
-        router.push("/login");
+        setIsLoggingOut(true);
+        try {
+            await createClient().auth.signOut();
+            useStore.getState().clearCart();
+            router.refresh();
+            router.push("/login");
+        } finally {
+            setIsLoggingOut(false);
+        }
     };
 
     const handleSaveChanges = async () => {
         if (!user) return;
         setSaving(true);
+        try {
+            const updates = {
+                full_name: formData.name,
+                phone_number: formData.phone,
+            };
 
-        const updates = {
-            full_name: formData.name,
-            phone_number: formData.phone,
-        };
+            const result = await updateUserProfile(updates);
 
-        const result = await updateUserProfile(updates);
-
-        if (result.success) {
-            setUser(prev => prev ? ({ ...prev, name: formData.name, phone: formData.phone }) : null);
-            setIsEditOpen(false);
-        } else {
-            console.error("Error updating profile:", result.error);
-            alert("Failed to update profile. Please try again.");
+            if (result.success) {
+                setUser(prev => prev ? ({ ...prev, name: formData.name, phone: formData.phone }) : null);
+                setIsEditOpen(false);
+                toast.success("Profile updated successfully!");
+            } else {
+                console.error("Error updating profile:", result.error);
+                toast.error("Failed to update profile. Please try again.");
+            }
+        } finally {
+            setSaving(false);
         }
-        setSaving(false);
     };
 
     const containerVariants = {
@@ -235,6 +246,7 @@ export default function AccountPage() {
                             variant="outline"
                             onClick={handleLogout}
                             className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                            loading={isLoggingOut}
                         >
                             Sign Out
                         </Button>
@@ -278,8 +290,8 @@ export default function AccountPage() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="submit" onClick={handleSaveChanges} disabled={saving}>
-                            {saving ? "Saving..." : "Save changes"}
+                        <Button type="submit" onClick={handleSaveChanges} loading={saving}>
+                            Save changes
                         </Button>
                     </DialogFooter>
                 </DialogContent>

@@ -135,3 +135,29 @@ export async function updateCartQuantityServerAction(cartItemId: string, quantit
         return { success: false, error: error.message };
     }
 }
+
+/**
+ * Completely clears the cart for the current user from the database.
+ */
+export async function clearUserCartAction() {
+    try {
+        const supabase = await createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) return { success: false, error: "Not logged in" };
+
+        // Delete the cart record. CASCADE should handle cart_items if set up in SQL,
+        // but we'll explicitly delete both to be safe or just delete the cart.
+        const { error } = await supabase
+            .from('carts')
+            .delete()
+            .eq('user_id', session.user.id);
+
+        if (error) throw error;
+
+        return { success: true };
+    } catch (error: any) {
+        console.error("Clear cart error:", error);
+        return { success: false, error: error.message };
+    }
+}

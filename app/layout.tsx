@@ -3,6 +3,8 @@ import { Inter, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { Toaster } from "sonner";
+import { LoadingProvider } from "@/components/providers/LoadingProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -49,11 +51,14 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${cormorantGaramond.variable} antialiased bg-background text-foreground`}
       >
-        <Navbar />
-        <main className="min-h-screen pb-16 md:pb-0">
-          {children}
-        </main>
-        <BottomNav />
+        <Toaster position="top-center" richColors />
+        <LoadingProvider>
+          <Navbar />
+          <main className="min-h-screen pb-16 md:pb-0">
+            {children}
+          </main>
+          <BottomNav />
+        </LoadingProvider>
       </body>
     </html>
   );

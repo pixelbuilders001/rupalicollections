@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2, ArrowRight } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { useEffect, useState, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { getCartServerAction, removeFromCartServerAction, updateCartQuantityServerAction } from "@/app/actions/cart-actions";
 import { CartItem } from "@/lib/types";
 
@@ -14,11 +16,12 @@ export default function CartPage() {
     const { items, cartTotal, setCartItems } = useStore();
     const [isMounted, setIsMounted] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [isUpdating, setIsUpdating] = useState<string | null>(null);
+    const [isRemoving, setIsRemoving] = useState<string | null>(null);
 
     const fetchCart = useCallback(async () => {
         try {
             const result = await getCartServerAction();
-            console.log("Cart API result:", result);
             if (result.success && result.data) {
                 const serverItems = result.data.map((item: any) => ({
                     ...item.products,
@@ -29,9 +32,9 @@ export default function CartPage() {
                     id: item.product_id
                 }));
                 setCartItems(serverItems);
-            } else {
-                setCartItems([]);
             }
+            // If result.success is false and data is missing, we don't clear.
+            // This preserves localStorage items for guests.
         } catch (error) {
             console.error("Failed to fetch cart:", error);
         } finally {
@@ -41,26 +44,52 @@ export default function CartPage() {
 
     useEffect(() => {
         setIsMounted(true);
-        fetchCart();
+        const checkAuthAndFetch = async () => {
+            const { data: { session } } = await createClient().auth.getSession();
+            if (session) {
+                await fetchCart();
+            } else {
+                setLoading(false); // Just show local items
+            }
+        };
+        checkAuthAndFetch();
     }, [fetchCart]);
 
     const handleUpdateQuantity = async (cartId: string, quantity: number) => {
         if (quantity < 1) return;
-        const result = await updateCartQuantityServerAction(cartId, quantity);
-        if (result.success) {
-            fetchCart();
-        } else {
-            alert("Failed to update quantity");
+
+        // Optimistic local update
+        useStore.getState().updateQuantity(cartId, quantity);
+
+        const { data: { session } } = await createClient().auth.getSession();
+        if (session) {
+            const result = await updateCartQuantityServerAction(cartId, quantity);
+            if (!result.success) {
+                // Revert on failure if needed, or re-fetch
+                fetchCart();
+            }
         }
     };
 
     const handleRemoveFromCart = async (cartId: string) => {
-        const result = await removeFromCartServerAction(cartId);
-        if (result.success) {
-            fetchCart();
-        } else {
-            alert("Failed to remove item");
+        // Optimistic local removal
+        useStore.getState().removeFromCart(cartId);
+
+        const { data: { session } } = await createClient().auth.getSession();
+        if (session) {
+            const result = await removeFromCartServerAction(cartId);
+            if (!result.success) {
+                fetchCart();
+            }
         }
+    };
+
+    const [isCheckingOut, setIsCheckingOut] = useState(false);
+    const router = useRouter();
+
+    const handleCheckout = () => {
+        setIsCheckingOut(true);
+        router.push("/checkout");
     };
 
     if (!isMounted) return null;
@@ -112,29 +141,36 @@ export default function CartPage() {
                                 <div>
                                     <div className="flex justify-between">
                                         <h3 className="font-medium line-clamp-1">{item.name}</h3>
-                                        <button
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
                                             onClick={() => handleRemoveFromCart(item.cartId)}
-                                            className="text-muted-foreground hover:text-red-500"
+                                            className="text-muted-foreground hover:text-red-500 h-8 w-8"
+                                            loading={isRemoving === item.cartId}
                                         >
                                             <Trash2 className="h-4 w-4" />
-                                        </button>
+                                        </Button>
                                     </div>
                                     <p className="text-sm text-muted-foreground">Size: {item.selectedSize}</p>
                                     <p className="font-semibold mt-1">{formatPrice(item.price)}</p>
                                 </div>
 
-                                <div className="flex items-center gap-3">
-                                    <div className="flex items-center rounded-md border h-8">
+                                <div className="flex items-center gap-3 text-muted-foreground">
+                                    <div className="flex items-center rounded-md border h-8 bg-background">
                                         <button
-                                            className="h-8 w-8 flex items-center justify-center hover:bg-muted"
+                                            className="h-8 w-8 flex items-center justify-center hover:bg-muted disabled:opacity-50"
                                             onClick={() => handleUpdateQuantity(item.cartId, item.quantity - 1)}
+                                            disabled={isUpdating === item.cartId}
                                         >
                                             <Minus className="h-3 w-3" />
                                         </button>
-                                        <span className="w-8 text-center text-sm">{item.quantity}</span>
+                                        <span className="w-8 text-center text-sm font-medium">
+                                            {isUpdating === item.cartId ? "..." : item.quantity}
+                                        </span>
                                         <button
-                                            className="h-8 w-8 flex items-center justify-center hover:bg-muted"
+                                            className="h-8 w-8 flex items-center justify-center hover:bg-muted disabled:opacity-50"
                                             onClick={() => handleUpdateQuantity(item.cartId, item.quantity + 1)}
+                                            disabled={isUpdating === item.cartId}
                                         >
                                             <Plus className="h-3 w-3" />
                                         </button>
@@ -168,11 +204,14 @@ export default function CartPage() {
                         </div>
                     </div>
 
-                    <Link href="/checkout">
-                        <Button className="w-full mt-6" size="lg">
-                            Proceed to Checkout <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                    </Link>
+                    <Button
+                        className="w-full mt-6"
+                        size="lg"
+                        loading={isCheckingOut}
+                        onClick={handleCheckout}
+                    >
+                        Proceed to Checkout <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
                 </div>
             </div>
         </div>
