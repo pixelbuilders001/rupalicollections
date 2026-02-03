@@ -35,10 +35,10 @@ import { Input } from "@/components/ui/input";
 
 interface UserProfile {
     id: string;
-    email: string | undefined;
-    name: string | undefined;
-    avatar_url: string | undefined;
-    phone: string | undefined;
+    email: string | null;
+    name: string | null;
+    avatar_url: string | null;
+    phone: string | null;
 }
 
 export default function AccountPage() {
@@ -127,14 +127,17 @@ export default function AccountPage() {
             const result = await updateUserProfile(updates);
 
             if (result.success) {
-                const updatedProfile = { name: formData.name, avatar_url: avatar_url || null };
-                setUser(prev => prev ? ({ ...prev, ...updatedProfile, phone: formData.phone }) : null);
+                const updatedProfileData = {
+                    name: formData.name || null,
+                    avatar_url: avatar_url || null
+                };
+                setUser(prev => prev ? ({ ...prev, ...updatedProfileData, phone: formData.phone || null }) : null);
                 setPreviewUrl(avatar_url || null);
                 setSelectedFile(null);
                 setIsEditOpen(false);
 
                 // Update global store for instant reflect in BottomNav
-                useStore.getState().setUserProfile(updatedProfile);
+                useStore.getState().setUserProfile(updatedProfileData as { name: string; avatar_url: string | null });
 
                 toast.success("Profile updated successfully!");
                 router.refresh();

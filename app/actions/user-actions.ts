@@ -21,10 +21,10 @@ export async function getUserProfile() {
 
     const profile = {
         id: user.id,
-        email: user.email,
+        email: user.email || null,
         name: profileData?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || "Rupali Guest",
-        avatar_url: profileData?.profile_image || profileData?.avatar_url || user.user_metadata?.avatar_url,
-        phone: profileData?.phone_number || user.phone || user.user_metadata?.phone || ""
+        avatar_url: profileData?.profile_image || profileData?.avatar_url || user.user_metadata?.avatar_url || null,
+        phone: profileData?.phone_number || user.phone || user.user_metadata?.phone || null
     };
 
     return { success: true, data: profile };
