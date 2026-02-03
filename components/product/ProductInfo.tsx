@@ -248,7 +248,7 @@ export function ProductInfo({ product, isWishlisted = false }: ProductInfoProps)
 
     return (
         <div className="flex flex-col gap-6 pb-24 md:pb-0">
-            <BackButton className="w-fit md:hidden" showLabel label="Back" />
+            {/* <BackButton className="w-fit md:hidden" showLabel label="Back" /> */}
             <div>
                 <div className="flex items-center justify-between">
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Premium Collection</p>

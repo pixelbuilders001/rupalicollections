@@ -100,6 +100,10 @@ function ShopContent() {
         return result;
     }, [productsList, priceRange, sortBy]);
 
+    if (loading) {
+        return <FullPageLoader />;
+    }
+
     return (
         <div className="container mx-auto px-4 py-4 md:py-8">
             {/* <BackButton className="mb-4" showLabel label="Back" /> */}
@@ -139,11 +143,7 @@ function ShopContent() {
 
             <div className="flex gap-8">
                 <div className="w-full">
-                    {loading ? (
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                            {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="aspect-[3/4] animate-pulse rounded-md bg-secondary/30" />)}
-                        </div>
-                    ) : filteredProducts.length === 0 ? (
+                    {filteredProducts.length === 0 ? (
                         <div className="flex h-64 flex-col items-center justify-center text-muted-foreground">
                             <p className="text-sm">No products found</p>
                             <Button variant="link" className="text-xs" onClick={() => { setSelectedCategory(null); setPriceRange([0, 100000]); }}>Clear Filters</Button>

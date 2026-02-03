@@ -136,3 +136,44 @@ export async function getProductById(id: string) {
 
     return { success: true, data: data as Product };
 }
+export async function searchProductsAction(query: string) {
+    if (!query || query.trim().length === 0) {
+        return { success: true, data: { products: [], categories: [] } };
+    }
+
+    const supabase = await createClient();
+    const searchStr = `%${query}%`;
+
+    try {
+        // Search products: name, description, slug
+        const { data: products, error: pError } = await supabase
+            .from('products')
+            .select('*')
+            .or(`name.ilike.${searchStr},description.ilike.${searchStr},slug.ilike.${searchStr}`)
+            .eq('is_active', true)
+            .limit(10);
+
+        if (pError) throw pError;
+
+        // Search categories: name, description, slug
+        const { data: categories, error: cError } = await supabase
+            .from('categories')
+            .select('*')
+            .or(`name.ilike.${searchStr},slug.ilike.${searchStr}`)
+            .eq('is_active', true)
+            .limit(5);
+
+        if (cError) throw cError;
+
+        return {
+            success: true,
+            data: {
+                products: products || [],
+                categories: categories || []
+            }
+        };
+    } catch (error: any) {
+        console.error("Search error:", error);
+        return { success: false, error: error.message };
+    }
+}

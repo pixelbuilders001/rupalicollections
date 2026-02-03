@@ -12,6 +12,8 @@ import { getUserProfile } from "@/app/actions/user-actions";
 import { usePathname } from "next/navigation";
 import { BackButton } from "../common/BackButton";
 
+import { GlobalSearch } from "./GlobalSearch";
+
 export function Navbar() {
     const cartCount = useStore((state) => state.cartCount());
     const setIsLoggedIn = useStore((state) => state.setIsLoggedIn);
@@ -80,7 +82,7 @@ export function Navbar() {
     }, [supabase]);
 
     return (
-        <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-md transition-all">
+        <header className="sticky top-0 z-40 w-full bg-background/95 backdrop-blur-md transition-all">
             <div className="container mx-auto flex h-14 items-center justify-between px-4">
                 <div className="flex items-center gap-2">
                     {!isHome && <BackButton className="-ml-2 h-10 w-10 rounded-full" />}
@@ -107,9 +109,7 @@ export function Navbar() {
 
                 {/* Actions - Simplified */}
                 <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-9 w-9">
-                        <Search className="h-4.5 w-4.5 text-foreground/80" />
-                    </Button>
+                    <GlobalSearch showTrigger={!isHome} />
                     <Link href="/cart">
                         <Button variant="ghost" size="icon" className="relative h-9 w-9">
                             <ShoppingBag className="h-4.5 w-4.5 text-foreground/80" />

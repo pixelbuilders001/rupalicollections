@@ -19,7 +19,9 @@ interface CartState {
     serviceableCity: string | null;
     serviceableState: string | null;
     isLoggedIn: boolean;
+    isSearchOpen: boolean;
     setIsLoggedIn: (isLoggedIn: boolean) => void;
+    setIsSearchOpen: (isOpen: boolean) => void;
     setServiceablePincode: (pincode: string | null, city?: string | null, state?: string | null) => void;
 }
 
@@ -29,7 +31,9 @@ export const useStore = create<CartState>()(
             items: [],
             wishlist: [],
             isLoggedIn: false,
+            isSearchOpen: false,
             setIsLoggedIn: (isLoggedIn) => set({ isLoggedIn }),
+            setIsSearchOpen: (isSearchOpen) => set({ isSearchOpen }),
             addToCart: (product, quantity, size, color) => {
                 const cartId = `${product.id}-${size}-${color || "default"}`;
 

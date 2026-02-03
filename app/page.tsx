@@ -10,6 +10,7 @@ import { products, categories as fallbackCategories } from "@/lib/data";
 import { useEffect, useState } from "react";
 import { DBCategory, Product } from "@/lib/types";
 import { getCategories, getTrendingProducts, getNewArrivals } from "@/app/actions/product-actions";
+import { useStore } from "@/lib/store";
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -58,9 +59,12 @@ export default function Home() {
     <div className="flex flex-col gap-8 pb-10 bg-background">
       {/* Search Bar - App Style (Sticky or Top) */}
       <div className="px-4 pt-2 -mb-4 md:hidden">
-        <div className="flex items-center gap-2 rounded-full bg-secondary/30 px-4 py-2 text-muted-foreground border border-border/50">
-          <Search className="h-4 w-4" />
-          <span className="text-sm">Search for products...</span>
+        <div
+          onClick={() => useStore.getState().setIsSearchOpen(true)}
+          className="flex items-center gap-3 rounded-2xl bg-secondary/40 px-5 py-3.5 text-muted-foreground/60 border border-border/40 active:scale-[0.98] transition-all cursor-text shadow-sm"
+        >
+          <Search className="h-4.5 w-4.5 text-primary/60" />
+          <span className="text-sm font-medium">Search sarees, kurtis, silk...</span>
         </div>
       </div>
 

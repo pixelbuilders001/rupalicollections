@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
-import { getUserProfile, updateUserProfile } from "@/app/actions/user-actions";
+import { getUserProfile, updateUserProfile, uploadProfilePhoto } from "@/app/actions/user-actions";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -46,9 +46,11 @@ export default function AccountPage() {
     const [user, setUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [isEditOpen, setIsEditOpen] = useState(false);
-    const [formData, setFormData] = useState({ name: "", phone: "" });
+    const [formData, setFormData] = useState({ name: "", phone: "", email: "" });
     const [saving, setSaving] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     useEffect(() => {
         const getUser = async () => {
@@ -62,13 +64,24 @@ export default function AccountPage() {
             setUser(profile);
             setFormData({
                 name: profile.name || "",
-                phone: profile.phone || ""
+                phone: profile.phone || "",
+                email: profile.email || ""
             });
+            if (profile.avatar_url) setPreviewUrl(profile.avatar_url);
             setLoading(false);
         };
 
         getUser();
     }, [router]);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+            const url = URL.createObjectURL(file);
+            setPreviewUrl(url);
+        }
+    };
 
     const handleLogout = async () => {
         setIsLoggingOut(true);
@@ -86,21 +99,47 @@ export default function AccountPage() {
         if (!user) return;
         setSaving(true);
         try {
+            let avatar_url = user.avatar_url;
+
+            // Handle Photo Upload if selected
+            if (selectedFile) {
+                const uploadFormData = new FormData();
+                uploadFormData.append('file', selectedFile);
+
+                const uploadResult = await uploadProfilePhoto(uploadFormData);
+
+                if (uploadResult.success && uploadResult.data) {
+                    avatar_url = uploadResult.data;
+                } else {
+                    toast.error("Failed to upload photo: " + uploadResult.error);
+                    setSaving(false);
+                    return;
+                }
+            }
+
             const updates = {
                 full_name: formData.name,
                 phone_number: formData.phone,
+                profile_image: avatar_url,
+                email: formData.email
             };
 
             const result = await updateUserProfile(updates);
 
             if (result.success) {
-                setUser(prev => prev ? ({ ...prev, name: formData.name, phone: formData.phone }) : null);
+                setUser(prev => prev ? ({ ...prev, name: formData.name, phone: formData.phone, avatar_url }) : null);
+                setPreviewUrl(avatar_url || null);
+                setSelectedFile(null);
                 setIsEditOpen(false);
                 toast.success("Profile updated successfully!");
+                router.refresh();
             } else {
                 console.error("Error updating profile:", result.error);
                 toast.error("Failed to update profile. Please try again.");
             }
+        } catch (error) {
+            console.error("Profile update error:", error);
+            toast.error("An unexpected error occurred.");
         } finally {
             setSaving(false);
         }
@@ -146,13 +185,13 @@ export default function AccountPage() {
     }
 
     return (
-        <div className="min-h-screen bg-secondary/20 pb-20 pt-8 md:pb-8">
+        <div className="min-h-screen bg-secondary/20 pb-20 pt-4 md:pb-8">
             {/* Decorative Background Blob */}
             <div className="fixed -left-40 -top-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
             <div className="fixed -bottom-40 -right-40 h-96 w-96 rounded-full bg-pink-500/5 blur-3xl" />
 
             <div className="container relative mx-auto max-w-5xl px-4">
-                <BackButton className="mb-4" showLabel label="Back" />
+                {/* <BackButton className="mb-4" showLabel label="Back" /> */}
 
                 {/* Header Section */}
                 <motion.div
@@ -165,52 +204,79 @@ export default function AccountPage() {
                     </div>
                 </motion.div>
 
-                <div className="grid gap-8 lg:grid-cols-12">
-                    {/* Left Column: Profile Card */}
+                <div className="grid gap-6 lg:grid-cols-12">
+                    {/* Left Column: Redesigned Profile Card */}
                     <div className="lg:col-span-4">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            className="sticky top-24 overflow-hidden rounded-2xl border border-white/40 bg-white/60 shadow-xl backdrop-blur-xl"
+                            className="sticky top-24 overflow-hidden rounded-[2rem] border border-white/40 bg-white/40 shadow-2xl backdrop-blur-2xl"
                         >
-                            {/* Edit Button */}
-                            <div className="absolute top-4 right-4 z-10">
-                                <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    className="h-8 w-8 rounded-full bg-white/50 text-muted-foreground hover:bg-white hover:text-primary transition-colors border border-transparent hover:border-border/50 shadow-sm"
-                                    onClick={() => setIsEditOpen(true)}
-                                >
-                                    <Pencil className="h-4 w-4" />
-                                </Button>
-                            </div>
+                            <div className="relative p-8 flex flex-col items-center">
+                                {/* Edit Button - Top Right */}
+                                <div className="absolute top-4 right-4">
+                                    <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-10 w-10 rounded-xl bg-primary/5 text-primary hover:bg-primary/10 transition-all active:scale-95"
+                                        onClick={() => setIsEditOpen(true)}
+                                    >
+                                        <Pencil className="h-4.5 w-4.5" />
+                                    </Button>
+                                </div>
 
-
-                            <div className="relative flex flex-col items-center px-6 pb-8 pt-8 text-center">
-                                <div className="relative mb-4 h-24 w-24 overflow-hidden rounded-full border-4 border-white bg-white shadow-lg">
-                                    {user?.avatar_url ? (
+                                {/* Centered Photo */}
+                                <div className="relative mb-6 h-24 w-24 overflow-hidden rounded-3xl border-4 border-white bg-white shadow-xl">
+                                    {previewUrl ? (
                                         <Image
-                                            src={user.avatar_url}
-                                            alt={user.name || "User"}
+                                            src={previewUrl}
+                                            alt={user?.name || "User"}
                                             fill
                                             className="object-cover"
                                         />
                                     ) : (
-                                        <div className="flex h-full w-full items-center justify-center bg-primary/10 text-primary">
+                                        <div className="flex h-full w-full items-center justify-center bg-primary/5 text-primary">
                                             <User className="h-10 w-10" />
                                         </div>
                                     )}
                                 </div>
 
-                                <div className="space-y-1">
-                                    <h2 className="font-serif text-2xl font-bold text-gray-900">{user?.name}</h2>
-                                    <p className="text-sm font-medium text-muted-foreground">{user?.email}</p>
-                                    {user?.phone && <p className="text-xs text-muted-foreground">{user.phone}</p>}
+
+
+                                {/* Info List */}
+                                <div className="w-full space-y-4 pt-6 border-t border-black/5">
+                                    <div className="flex items-center gap-4 group">
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary/30 text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary transition-colors">
+                                            <User className="h-5 w-5" />
+                                        </div>
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/60 leading-none mb-1.5">Full Name</span>
+                                            <span className="text-sm font-semibold text-gray-700 truncate">{user?.name}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-4 group">
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary/30 text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary transition-colors">
+                                            <Bell className="h-5 w-5" />
+                                        </div>
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/60 leading-none mb-1.5">Email Address</span>
+                                            <span className="text-sm font-semibold text-gray-700 truncate">{user?.email}</span>
+                                        </div>
+                                    </div>
+
+                                    {user?.phone && (
+                                        <div className="flex items-center gap-4 group">
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary/30 text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary transition-colors">
+                                                <CreditCard className="h-5 w-5" />
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/60 leading-none mb-1.5">Phone Number</span>
+                                                <span className="text-sm font-semibold text-gray-700">{user.phone}</span>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-
-
-
-
                             </div>
                         </motion.div>
                     </div>
@@ -227,33 +293,34 @@ export default function AccountPage() {
                                 <motion.div key={item.label} variants={itemVariants}>
                                     <Link
                                         href={item.href}
-                                        className="group relative flex h-full items-center gap-4 overflow-hidden rounded-xl border border-white/50 bg-white/70 p-5 shadow-sm backdrop-blur-sm transition-all hover:-translate-y-1 hover:shadow-lg hover:border-primary/20"
+                                        className="group relative flex h-full items-center gap-4 overflow-hidden rounded-2xl border border-white/50 bg-white/40 p-5 shadow-sm backdrop-blur-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:border-primary/20"
                                     >
-                                        <div className={`rounded-xl p-3 shadow-inner ${item.bg} ${item.color}`}>
+                                        <div className={`rounded-xl p-3 shadow-sm ${item.bg} ${item.color} transition-transform group-hover:scale-110 duration-300`}>
                                             <item.icon className="h-6 w-6" />
                                         </div>
                                         <div className="flex-1">
-                                            <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">{item.label}</h3>
-                                            <p className="text-xs text-muted-foreground">{item.desc}</p>
+                                            <h3 className="font-bold text-gray-800 group-hover:text-primary transition-colors">{item.label}</h3>
+                                            <p className="text-xs text-muted-foreground/80">{item.desc}</p>
                                         </div>
-                                        <ChevronRight className="h-5 w-5 text-muted-foreground/50 transition-transform group-hover:translate-x-1 group-hover:text-primary" />
+                                        <ChevronRight className="h-5 w-5 text-muted-foreground/30 transition-all group-hover:translate-x-1 group-hover:text-primary" />
                                     </Link>
                                 </motion.div>
                             ))}
                         </motion.div>
-
-                    </div>
-                    <div className="mt-6 md:hidden">
-                        <Button
-                            variant="outline"
-                            onClick={handleLogout}
-                            className="w-full border-red-200 text-red-600 hover:bg-red-50"
-                            loading={isLoggingOut}
-                        >
-                            Sign Out
-                        </Button>
                     </div>
                 </div>
+            </div>
+
+            <div className="mt-8 flex justify-center pb-8">
+                <Button
+                    variant="outline"
+                    onClick={handleLogout}
+                    className="w-full max-w-sm rounded-2xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 h-12 font-bold uppercase tracking-widest text-[11px]"
+                    loading={isLoggingOut}
+                >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                </Button>
             </div>
 
             {/* Edit Profile Modal */}
@@ -261,11 +328,52 @@ export default function AccountPage() {
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle>Edit Profile</DialogTitle>
-                        <DialogDescription>
+                        {/* <DialogDescription>
                             Make changes to your profile here. Click save when you're done.
-                        </DialogDescription>
+                        </DialogDescription> */}
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
+                        <div className="flex flex-col items-center justify-center gap-4 mb-4">
+                            <div className="relative h-20 w-20 overflow-hidden rounded-full border bg-muted">
+                                {previewUrl ? (
+                                    <Image
+                                        src={previewUrl}
+                                        alt="Preview"
+                                        fill
+                                        className="object-cover"
+                                    />
+                                ) : (
+                                    <User className="h-10 w-10 m-auto text-muted-foreground" />
+                                )}
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs h-8"
+                                onClick={() => document.getElementById('modal-avatar-input')?.click()}
+                            >
+                                <Pencil className="h-3 w-3 mr-2" /> Change Photo
+                            </Button>
+                            <input
+                                id="modal-avatar-input"
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={handleFileChange}
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <label htmlFor="email" className="text-right text-sm font-medium">
+                                Email
+                            </label>
+                            <Input
+                                id="email"
+
+                                value={formData.email}
+                                disabled
+                                className="col-span-3 bg-muted "
+                            />
+                        </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <label htmlFor="name" className="text-right text-sm font-medium">
                                 Name

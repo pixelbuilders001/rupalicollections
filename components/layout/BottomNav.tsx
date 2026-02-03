@@ -30,9 +30,14 @@ export function BottomNav() {
 
         initAuth();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             if (session?.user) {
-                setAvatarUrl(session.user.user_metadata?.avatar_url || null);
+                const result = await getUserProfile();
+                if (result.success && result.data) {
+                    setAvatarUrl(result.data.avatar_url || null);
+                } else {
+                    setAvatarUrl(session.user.user_metadata?.avatar_url || null);
+                }
             } else {
                 setAvatarUrl(null);
             }

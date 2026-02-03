@@ -120,7 +120,7 @@ export default function CartPage() {
     const finalTotal = total + delivery;
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-4">
             {/* <BackButton className="mb-4" showLabel label="Back" /> */}
             <h1 className="mb-4 font-serif text-xl font-bold">Shopping Cart</h1>
 
