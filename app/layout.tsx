@@ -5,6 +5,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Toaster } from "sonner";
 import { LoadingProvider } from "@/components/providers/LoadingProvider";
+import { ScrollToTop } from "@/components/common/ScrollToTop";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -53,6 +54,7 @@ export default function RootLayout({
       >
         <Toaster position="top-center" richColors />
         <LoadingProvider>
+          <ScrollToTop />
           <Navbar />
           <main className="min-h-screen pb-16 md:pb-0">
             {children}

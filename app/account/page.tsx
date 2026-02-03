@@ -127,10 +127,15 @@ export default function AccountPage() {
             const result = await updateUserProfile(updates);
 
             if (result.success) {
-                setUser(prev => prev ? ({ ...prev, name: formData.name, phone: formData.phone, avatar_url }) : null);
+                const updatedProfile = { name: formData.name, avatar_url: avatar_url || null };
+                setUser(prev => prev ? ({ ...prev, ...updatedProfile, phone: formData.phone }) : null);
                 setPreviewUrl(avatar_url || null);
                 setSelectedFile(null);
                 setIsEditOpen(false);
+
+                // Update global store for instant reflect in BottomNav
+                useStore.getState().setUserProfile(updatedProfile);
+
                 toast.success("Profile updated successfully!");
                 router.refresh();
             } else {

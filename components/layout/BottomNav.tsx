@@ -14,8 +14,9 @@ import { getUserProfile } from "@/app/actions/user-actions";
 export function BottomNav() {
     const pathname = usePathname();
     const cartCount = useStore((state) => state.cartCount());
+    const userProfile = useStore((state) => state.userProfile);
+    const setUserProfile = useStore((state) => state.setUserProfile);
     const [isMounted, setIsMounted] = useState(false);
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const supabase = createClient();
 
     useEffect(() => {
@@ -24,7 +25,10 @@ export function BottomNav() {
         const initAuth = async () => {
             const result = await getUserProfile();
             if (result.success && result.data) {
-                setAvatarUrl(result.data.avatar_url || null);
+                setUserProfile({
+                    name: result.data.name,
+                    avatar_url: result.data.avatar_url || null
+                });
             }
         };
 
@@ -34,23 +38,29 @@ export function BottomNav() {
             if (session?.user) {
                 const result = await getUserProfile();
                 if (result.success && result.data) {
-                    setAvatarUrl(result.data.avatar_url || null);
+                    setUserProfile({
+                        name: result.data.name,
+                        avatar_url: result.data.avatar_url || null
+                    });
                 } else {
-                    setAvatarUrl(session.user.user_metadata?.avatar_url || null);
+                    setUserProfile({
+                        name: session.user.user_metadata?.full_name || "Guest",
+                        avatar_url: session.user.user_metadata?.avatar_url || null
+                    });
                 }
             } else {
-                setAvatarUrl(null);
+                setUserProfile(null);
             }
         });
 
         return () => subscription.unsubscribe();
-    }, [supabase]);
+    }, [supabase, setUserProfile]);
 
     const navItems = [
         { href: "/", label: "Home", icon: Home },
         { href: "/shop", label: "Shop", icon: Grid },
         { href: "/cart", label: "Cart", icon: ShoppingBag, count: cartCount },
-        { href: "/account", label: "Profile", icon: User, avatar: avatarUrl },
+        { href: "/account", label: "Profile", icon: User, avatar: userProfile?.avatar_url },
     ];
 
     // Hide bottom nav on product details page to avoid overlap with sticky action bar

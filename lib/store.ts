@@ -20,8 +20,10 @@ interface CartState {
     serviceableState: string | null;
     isLoggedIn: boolean;
     isSearchOpen: boolean;
+    userProfile: { name: string; avatar_url: string | null } | null;
     setIsLoggedIn: (isLoggedIn: boolean) => void;
     setIsSearchOpen: (isOpen: boolean) => void;
+    setUserProfile: (profile: { name: string; avatar_url: string | null } | null) => void;
     setServiceablePincode: (pincode: string | null, city?: string | null, state?: string | null) => void;
 }
 
@@ -32,8 +34,10 @@ export const useStore = create<CartState>()(
             wishlist: [],
             isLoggedIn: false,
             isSearchOpen: false,
-            setIsLoggedIn: (isLoggedIn) => set({ isLoggedIn }),
+            userProfile: null,
+            setIsLoggedIn: (isLoggedIn) => set({ isLoggedIn, userProfile: isLoggedIn ? get().userProfile : null }),
             setIsSearchOpen: (isSearchOpen) => set({ isSearchOpen }),
+            setUserProfile: (userProfile) => set({ userProfile }),
             addToCart: (product, quantity, size, color) => {
                 const cartId = `${product.id}-${size}-${color || "default"}`;
 
