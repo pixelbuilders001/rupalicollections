@@ -11,9 +11,9 @@ import {
     Pencil,
     CheckCircle2,
     Loader2,
-    ChevronLeft,
     MoreVertical
 } from "lucide-react";
+import { BackButton } from "@/components/common/BackButton";
 import {
     Dialog,
     DialogContent,
@@ -158,14 +158,7 @@ export default function AddressesPage() {
                 {/* Header */}
                 <div className="mb-8 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => router.back()}
-                            className="rounded-full bg-white shadow-sm"
-                        >
-                            <ChevronLeft className="h-5 w-5" />
-                        </Button>
+                        <BackButton showLabel={false} className="bg-white shadow-sm" />
                         <h1 className="font-serif text-3xl font-bold">My Addresses</h1>
                     </div>
                     <Button onClick={() => handleOpenModal()} className="gap-2 shadow-lg">

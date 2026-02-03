@@ -16,6 +16,7 @@ import { SortOption, Product } from "@/lib/types";
 import { getCategories, getProducts } from "@/app/actions/product-actions";
 import { getWishlistIdsAction } from "@/app/actions/wishlist-actions";
 import { FullPageLoader } from "@/components/ui/FullPageLoader";
+import { BackButton } from "@/components/common/BackButton";
 
 function ShopContent() {
     const searchParams = useSearchParams();
@@ -101,6 +102,7 @@ function ShopContent() {
 
     return (
         <div className="container mx-auto px-4 py-4 md:py-8">
+            {/* <BackButton className="mb-4" showLabel label="Back" /> */}
             <div className="mb-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                     <div>

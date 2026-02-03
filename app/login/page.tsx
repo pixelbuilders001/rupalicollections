@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
+import { BackButton } from "@/components/common/BackButton";
 
 export default function LoginPage() {
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -23,6 +24,9 @@ export default function LoginPage() {
 
     return (
         <div className="relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden bg-background px-4">
+            <div className="absolute left-4 top-4 z-20">
+                <BackButton showLabel className="bg-white/50 backdrop-blur-md shadow-sm" />
+            </div>
             {/* Background Decorative Elements */}
             <div className="absolute top-[-10%] left-[-10%] h-[300px] w-[300px] rounded-full bg-primary/5 blur-[100px]" />
             <div className="absolute bottom-[-10%] right-[-10%] h-[300px] w-[300px] rounded-full bg-primary/10 blur-[100px]" />

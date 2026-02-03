@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { formatPrice } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
@@ -21,9 +21,10 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { confirmOrderAction } from "../actions/order-actions";
+import { BackButton } from "@/components/common/BackButton";
 
 export default function CheckoutPage() {
-    const { cartTotal, clearCart } = useStore();
+    const { cartTotal, clearCart, serviceablePincode, serviceableCity, serviceableState } = useStore();
     const router = useRouter();
     const [isSuccess, setIsSuccess] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -54,21 +55,38 @@ export default function CheckoutPage() {
                 const defaultAddr = result.data.find(a => a.is_default) || result.data[0];
                 if (defaultAddr) {
                     setSelectedAddressId(defaultAddr.id);
-                    setFormData({
-                        full_name: defaultAddr.full_name || "",
-                        phone: defaultAddr.phone || "",
-                        address_line_1: defaultAddr.address_line_1 || "",
-                        address_line_2: defaultAddr.address_line_2 || "",
-                        city: defaultAddr.city || "",
-                        state: defaultAddr.state || "",
-                        pincode: defaultAddr.pincode || "",
-                    });
+
+                    // ONLY fill the form from default address if NO session pincode exists
+                    // This prevents overwriting a new searched location with the default address
+                    if (!useStore.getState().serviceablePincode) {
+                        setFormData({
+                            full_name: defaultAddr.full_name || "",
+                            phone: defaultAddr.phone || "",
+                            address_line_1: defaultAddr.address_line_1 || "",
+                            address_line_2: defaultAddr.address_line_2 || "",
+                            city: defaultAddr.city || "",
+                            state: defaultAddr.state || "",
+                            pincode: defaultAddr.pincode || "",
+                        });
+                    }
                 }
             }
             setLoading(false);
         };
         fetchSaved();
     }, []);
+
+    // Pre-fill pincode, city, and state from product details check (overrides default address if searched)
+    useEffect(() => {
+        if (serviceablePincode) {
+            setFormData(prev => ({
+                ...prev,
+                pincode: serviceablePincode,
+                city: serviceableCity || prev.city,
+                state: serviceableState || prev.state
+            }));
+        }
+    }, [serviceablePincode, serviceableCity, serviceableState]);
 
     const handleAddressSelect = (id: string) => {
         const addr = savedAddresses.find(a => a.id === id);
@@ -167,6 +185,7 @@ export default function CheckoutPage() {
     return (
         <div className="min-h-screen bg-secondary/5 pb-16 pt-6">
             <div className="container mx-auto px-4 max-w-2xl">
+                <BackButton className="mb-4" showLabel label="Back" />
 
 
                 <form onSubmit={handlePlaceOrder} className="space-y-6">
@@ -255,11 +274,12 @@ export default function CheckoutPage() {
                                         required
                                         placeholder="City"
                                         value={formData.city}
+                                        disabled={!!serviceableCity}
                                         onChange={(e) => {
                                             setFormData({ ...formData, city: e.target.value });
                                             setSelectedAddressId(null);
                                         }}
-                                        className="h-10 text-sm"
+                                        className={cn("h-10 text-sm", !!serviceableCity && "bg-secondary/20")}
                                     />
                                     <Input
                                         required
@@ -276,11 +296,12 @@ export default function CheckoutPage() {
                                     required
                                     placeholder="State"
                                     value={formData.state}
+                                    disabled={!!serviceableState}
                                     onChange={(e) => {
                                         setFormData({ ...formData, state: e.target.value });
                                         setSelectedAddressId(null);
                                     }}
-                                    className="h-10 text-sm"
+                                    className={cn("h-10 text-sm", !!serviceableState && "bg-secondary/20")}
                                 />
 
                                 <div className="flex items-center gap-2 pt-1">

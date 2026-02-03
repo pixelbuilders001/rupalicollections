@@ -28,6 +28,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "knenexutxzvjorvk.public.blob.vercel-storage.com",
       },
+      {
+        protocol: "https",
+        hostname: "ehdylnqmhqagxbzrzdig.supabase.co",
+      },
     ],
   },
 };

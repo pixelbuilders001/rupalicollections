@@ -10,6 +10,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { OrderTracker } from "@/components/orders/OrderTracker";
+import { BackButton } from "@/components/common/BackButton";
 
 const statusConfig = {
     pending: { icon: Clock, color: "text-amber-600", bg: "bg-amber-50", label: "Pending" },
@@ -74,6 +75,7 @@ export default function OrdersPage() {
     return (
         <div className="min-h-screen bg-secondary/5 pb-20 pt-4">
             <div className="container mx-auto max-w-2xl px-4">
+                {/* <BackButton className="mb-4" showLabel label="Back" /> */}
                 <div className="mb-6 flex items-center justify-between">
                     <div>
                         <h1 className="font-serif text-2xl font-bold md:text-3xl">My Orders</h1>

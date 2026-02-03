@@ -15,6 +15,12 @@ interface CartState {
     setCartItems: (items: CartItem[]) => void;
     cartTotal: () => number;
     cartCount: () => number;
+    serviceablePincode: string | null;
+    serviceableCity: string | null;
+    serviceableState: string | null;
+    isLoggedIn: boolean;
+    setIsLoggedIn: (isLoggedIn: boolean) => void;
+    setServiceablePincode: (pincode: string | null, city?: string | null, state?: string | null) => void;
 }
 
 export const useStore = create<CartState>()(
@@ -22,6 +28,8 @@ export const useStore = create<CartState>()(
         (set, get) => ({
             items: [],
             wishlist: [],
+            isLoggedIn: false,
+            setIsLoggedIn: (isLoggedIn) => set({ isLoggedIn }),
             addToCart: (product, quantity, size, color) => {
                 const cartId = `${product.id}-${size}-${color || "default"}`;
 
@@ -56,7 +64,12 @@ export const useStore = create<CartState>()(
                     ),
                 }));
             },
-            clearCart: () => set({ items: [] }),
+            clearCart: () => set({
+                items: [],
+                serviceablePincode: null,
+                serviceableCity: null,
+                serviceableState: null
+            }),
             addToWishlist: (product) => {
                 set((state) => {
                     if (state.wishlist.some((item) => item.id === product.id)) return state;
@@ -78,9 +91,24 @@ export const useStore = create<CartState>()(
             cartCount: () => {
                 return get().items.reduce((count, item) => count + item.quantity, 0);
             },
+            serviceablePincode: null,
+            serviceableCity: null,
+            serviceableState: null,
+            setServiceablePincode: (pincode, city = null, state = null) =>
+                set({ serviceablePincode: pincode, serviceableCity: city, serviceableState: state }),
         }),
         {
             name: "rupalicollection-storage",
+            partialize: (state) => ({
+                items: state.isLoggedIn ? [] : state.items, // Only persist items for guests
+                wishlist: state.wishlist,
+                serviceablePincode: state.serviceablePincode,
+                serviceableCity: state.serviceableCity,
+                serviceableState: state.serviceableState,
+            }),
+            // On hydration, we can't easily check auth here because it's async,
+            // but we can ensure that when the user logs in, the components 
+            // will trigger a fetch and overwrite these items.
         }
     )
 );

@@ -22,6 +22,7 @@ import { getUserProfile, updateUserProfile } from "@/app/actions/user-actions";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { BackButton } from "@/components/common/BackButton";
 import {
     Dialog,
     DialogContent,
@@ -151,6 +152,7 @@ export default function AccountPage() {
             <div className="fixed -bottom-40 -right-40 h-96 w-96 rounded-full bg-pink-500/5 blur-3xl" />
 
             <div className="container relative mx-auto max-w-5xl px-4">
+                <BackButton className="mb-4" showLabel label="Back" />
 
                 {/* Header Section */}
                 <motion.div

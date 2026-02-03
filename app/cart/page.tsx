@@ -11,6 +11,8 @@ import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getCartServerAction, removeFromCartServerAction, updateCartQuantityServerAction } from "@/app/actions/cart-actions";
 import { CartItem } from "@/lib/types";
+import { BackButton } from "@/components/common/BackButton";
+import { CartLoader } from "@/components/cart/CartLoader";
 
 export default function CartPage() {
     const { items, cartTotal, setCartItems } = useStore();
@@ -23,7 +25,10 @@ export default function CartPage() {
         try {
             const result = await getCartServerAction();
             if (result.success && result.data) {
-                const serverItems = result.data.map((item: any) => ({
+                // Handle nested structure: result.data.cart.cart_items or result.data
+                const cartItems = result.data.cart?.cart_items || (Array.isArray(result.data) ? result.data : []);
+
+                const serverItems = cartItems.map((item: any) => ({
                     ...item.products,
                     cartId: item.id,
                     quantity: item.qty,
@@ -95,12 +100,7 @@ export default function CartPage() {
     if (!isMounted) return null;
 
     if (loading) {
-        return (
-            <div className="flex min-h-[60vh] flex-col items-center justify-center p-4">
-                <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-                <p className="mt-4 text-muted-foreground">Loading your cart...</p>
-            </div>
-        );
+        return <CartLoader />;
     }
 
     if (items.length === 0) {
@@ -121,7 +121,8 @@ export default function CartPage() {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h1 className="mb-8 font-serif text-3xl font-bold">Shopping Cart</h1>
+            {/* <BackButton className="mb-4" showLabel label="Back" /> */}
+            <h1 className="mb-4 font-serif text-xl font-bold">Shopping Cart</h1>
 
             <div className="grid gap-8 lg:grid-cols-3">
                 {/* Cart Items */}
