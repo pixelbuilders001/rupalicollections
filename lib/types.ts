@@ -62,6 +62,7 @@ export interface Address {
 
 export interface Order {
     id: string;
+    order_code: string;
     user_id: string;
     name: string;
     phone: string;
@@ -71,6 +72,15 @@ export interface Order {
     status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
     created_at: string;
     items?: OrderItem[];
+    history?: OrderHistoryItem[];
+}
+
+export interface OrderHistoryItem {
+    id: string;
+    order_id: string;
+    status: string;
+    note?: string;
+    created_at: string;
 }
 
 export interface OrderItem {

@@ -55,10 +55,12 @@ export async function getOrdersAction() {
             .from('orders')
             .select(`
                 *,
+                order_code,
                 items:order_items(
                     *,
                     product:products(*)
-                )
+                ),
+                history:order_history(*)
             `)
             .eq('user_id', session.user.id)
             .order('created_at', { ascending: false });
@@ -69,5 +71,28 @@ export async function getOrdersAction() {
     } catch (error: any) {
         console.error("Fetch orders error:", error);
         return { success: false, error: error.message || "Failed to fetch orders" };
+    }
+}
+
+export async function cancelOrderAction(orderId: string) {
+    try {
+        const supabase = await createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) return { success: false, error: "Not logged in" };
+
+        const { error } = await supabase
+            .from('orders')
+            .update({ status: 'cancelled' })
+            .eq('id', orderId)
+            .eq('user_id', session.user.id)
+            .eq('status', 'pending');
+
+        if (error) throw error;
+
+        return { success: true };
+    } catch (error: any) {
+        console.error("Cancel order error:", error);
+        return { success: false, error: error.message || "Failed to cancel order" };
     }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getOrdersAction } from "@/app/actions/order-actions";
+import { getOrdersAction, cancelOrderAction } from "@/app/actions/order-actions";
 import { Order } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import { Package, Clock, CheckCircle2, Truck, XCircle, ChevronRight, MapPin, Calendar } from "lucide-react";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import { OrderTracker } from "@/components/orders/OrderTracker";
 
 const statusConfig = {
     pending: { icon: Clock, color: "text-amber-600", bg: "bg-amber-50", label: "Pending" },
@@ -21,17 +22,31 @@ const statusConfig = {
 export default function OrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
+    const [isTrackerOpen, setIsTrackerOpen] = useState(false);
+    const fetchOrders = async () => {
+        setLoading(true);
+        const result = await getOrdersAction();
+        if (result.success && result.data) {
+            setOrders(result.data);
+        }
+        setLoading(false);
+    };
 
     useEffect(() => {
-        const fetchOrders = async () => {
-            const result = await getOrdersAction();
-            if (result.success && result.data) {
-                setOrders(result.data);
-            }
-            setLoading(false);
-        };
         fetchOrders();
     }, []);
+
+    const handleCancelOrder = async (orderId: string) => {
+        if (!confirm("Are you sure you want to cancel this order?")) return;
+
+        const result = await cancelOrderAction(orderId);
+        if (result.success) {
+            fetchOrders();
+        } else {
+            alert(result.error);
+        }
+    };
 
     if (loading) {
         return (
@@ -77,7 +92,7 @@ export default function OrdersPage() {
                                 <div className="flex flex-wrap items-center justify-between gap-4">
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Order ID</p>
-                                        <p className="font-mono text-sm font-medium">#{order.id.slice(0, 8).toUpperCase()}</p>
+                                        <p className="font-mono text-sm font-medium">#{order.order_code || order.id.slice(0, 8).toUpperCase()}</p>
                                     </div>
                                     <div className="flex items-center gap-6">
                                         <div className="hidden sm:block">
@@ -93,12 +108,13 @@ export default function OrdersPage() {
                                         </div>
                                         <div className="space-y-1 text-right">
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</p>
-                                            <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${statusConfig[order.status || 'pending'].bg} ${statusConfig[order.status || 'pending'].color}`}>
+                                            <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${statusConfig[order.status in statusConfig ? order.status : 'pending'].bg} ${statusConfig[order.status in statusConfig ? order.status : 'pending'].color}`}>
                                                 {(() => {
-                                                    const Config = statusConfig[order.status || 'pending'];
+                                                    const status = order.status in statusConfig ? order.status : 'pending';
+                                                    const Config = statusConfig[status];
                                                     return <Config.icon className="h-3 w-3" />;
                                                 })()}
-                                                {statusConfig[order.status || 'pending'].label}
+                                                {statusConfig[order.status in statusConfig ? order.status : 'pending'].label}
                                             </div>
                                         </div>
                                     </div>
@@ -139,20 +155,45 @@ export default function OrdersPage() {
                             </div>
 
                             {/* Order Footer */}
-                            <div className="bg-gray-50/30 p-4 sm:p-6">
-                                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                    <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                                        <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
-                                        <p className="line-clamp-1 italic">{order.address}</p>
+                            <div className="bg-gray-50/30 p-4 sm:p-6 w-full">
+                                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                                    <div className="flex-1">
+                                        <div className="flex items-start gap-2 text-xs text-muted-foreground mb-4">
+                                            <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                                            <p className="italic">{order.address}</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 justify-between">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-9 rounded-full border-primary/20 bg-primary/5 px-6 text-xs font-bold text-primary hover:bg-primary hover:text-white"
+                                                onClick={() => {
+                                                    setTrackingOrder(order);
+                                                    setIsTrackerOpen(true);
+                                                }}
+                                            >
+                                                Track Order
+                                            </Button>
+                                            {order.status?.toLowerCase() === 'created' && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-9 rounded-full border-red-200 bg-red-50 px-6 text-xs font-bold text-red-600 hover:bg-red-600 hover:text-white"
+                                                    onClick={() => handleCancelOrder(order.id)}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div className="flex items-center justify-between gap-6 border-t border-gray-100 pt-4 sm:border-0 sm:pt-0">
+                                    <div className="flex items-center justify-between gap-6 border-t border-gray-100 pt-4 sm:border-0 sm:pt-0 shrink-0">
                                         <div className="text-right">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Payment</p>
-                                            <p className="text-xs font-medium uppercase">{order.payment_method}</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-nowrap">Payment</p>
+                                            <p className="text-xs font-medium uppercase text-nowrap">{order.payment_method}</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Paid</p>
-                                            <p className="text-lg font-black text-primary">{formatPrice(order.amount)}</p>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-nowrap">Total Paid</p>
+                                            <p className="text-lg font-black text-primary text-nowrap">{formatPrice(order.amount)}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -160,6 +201,12 @@ export default function OrdersPage() {
                         </motion.div>
                     ))}
                 </div>
+
+                <OrderTracker
+                    order={trackingOrder}
+                    open={isTrackerOpen}
+                    onOpenChange={setIsTrackerOpen}
+                />
             </div>
         </div>
     );
