@@ -37,10 +37,10 @@ export default function OrdersPage() {
         fetchOrders();
     }, []);
 
-    const handleCancelOrder = async (orderId: string) => {
+    const handleCancelOrder = async (orderCode: string) => {
         if (!confirm("Are you sure you want to cancel this order?")) return;
 
-        const result = await cancelOrderAction(orderId);
+        const result = await cancelOrderAction(orderCode);
         if (result.success) {
             fetchOrders();
         } else {

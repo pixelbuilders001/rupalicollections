@@ -74,21 +74,33 @@ export async function getOrdersAction() {
     }
 }
 
-export async function cancelOrderAction(orderId: string) {
+export async function cancelOrderAction(orderCode: string) {
     try {
         const supabase = await createClient();
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!session) return { success: false, error: "Not logged in" };
 
-        const { error } = await supabase
-            .from('orders')
-            .update({ status: 'cancelled' })
-            .eq('id', orderId)
-            .eq('user_id', session.user.id)
-            .eq('status', 'pending');
+        const token = session?.access_token || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-        if (error) throw error;
+        const response = await fetch('https://ehdylnqmhqagxbzrzdig.supabase.co/functions/v1/order-status-change', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                order_id: orderCode,
+                status: 'cancelled',
+                note: 'Cancelled by the customer'
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to cancel order');
+        }
 
         return { success: true };
     } catch (error: any) {

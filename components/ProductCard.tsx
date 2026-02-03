@@ -6,18 +6,24 @@ import { Heart } from "lucide-react";
 import { Product } from "@/lib/types";
 import { formatPrice, calculateDiscount, cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "@/lib/store";
 
 interface ProductCardProps {
     product: Product;
+    isWishlisted?: boolean;
+    onRemove?: () => void;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
-    const [isLiked, setIsLiked] = useState(false);
+export function ProductCard({ product, isWishlisted = false, onRemove }: ProductCardProps) {
+    const [isLiked, setIsLiked] = useState(isWishlisted);
     const addToWishlist = useStore((state) => state.addToWishlist);
-
+    const removeFromWishlist = useStore((state) => state.removeFromWishlist);
     const [imgSrc, setImgSrc] = useState(product.thumbnail_url || "https://images.unsplash.com/photo-1560393464-5c69a73c5770?q=80&w=800&auto=format&fit=crop");
+
+    useEffect(() => {
+        setIsLiked(isWishlisted);
+    }, [isWishlisted]);
 
     const displayPrice = product.sale_price || product.price;
     const originalPrice = product.sale_price ? product.price : null;
@@ -44,10 +50,43 @@ export function ProductCard({ product }: ProductCardProps) {
 
                 {/* Wishlist Button */}
                 <button
-                    onClick={(e) => {
+                    onClick={async (e) => {
                         e.preventDefault();
-                        setIsLiked(!isLiked);
-                        addToWishlist(product);
+                        if (!isLiked) {
+                            setIsLiked(true);
+                            addToWishlist(product);
+                            try {
+                                const { addToWishlistAction } = await import("@/app/actions/wishlist-actions");
+                                const result = await addToWishlistAction(product.id);
+                                if (!result.success) {
+                                    setIsLiked(false);
+                                    // re-toggle store state if needed, or just warn
+                                    console.error("Wishlist API failed", result.error);
+                                }
+                            } catch (err) {
+                                console.error(err);
+                                setIsLiked(false);
+                            }
+                        }
+                        else {
+                            // Handle removal
+                            setIsLiked(false);
+                            removeFromWishlist(product.id);
+
+                            try {
+                                const { removeFromWishlistAction } = await import("@/app/actions/wishlist-actions");
+                                const result = await removeFromWishlistAction(product.id);
+                                if (result.success) {
+                                    if (onRemove) onRemove();
+                                } else {
+                                    setIsLiked(true); // Revert if failed
+                                    console.error("Remove from wishlist failed", result.error);
+                                }
+                            } catch (err) {
+                                console.error(err);
+                                setIsLiked(true);
+                            }
+                        }
                     }}
                     className="absolute right-2 top-2 rounded-full bg-white/80 p-1.5 text-foreground backdrop-blur-sm transition-transform hover:scale-110 active:scale-95"
                 >

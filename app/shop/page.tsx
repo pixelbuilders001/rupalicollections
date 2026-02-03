@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SortOption, Product } from "@/lib/types";
 import { getCategories, getProducts } from "@/app/actions/product-actions";
+import { getWishlistIdsAction } from "@/app/actions/wishlist-actions";
 import { FullPageLoader } from "@/components/ui/FullPageLoader";
 
 function ShopContent() {
@@ -25,6 +26,7 @@ function ShopContent() {
     const [sortBy, setSortBy] = useState<SortOption>("popularity");
     const [categories, setCategories] = useState<any[]>([]);
     const [productsList, setProductsList] = useState<Product[]>([]);
+    const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -34,7 +36,14 @@ function ShopContent() {
                 setCategories(result.data);
             }
         };
+        const fetchWishlistIds = async () => {
+            const result = await getWishlistIdsAction();
+            if (result.success && result.data) {
+                setWishlistIds(new Set(result.data));
+            }
+        };
         fetchCategories();
+        fetchWishlistIds();
     }, []);
 
     useEffect(() => {
@@ -133,7 +142,11 @@ function ShopContent() {
                     ) : (
                         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4">
                             {filteredProducts.map((product) => (
-                                <ProductCard key={product.id} product={product} />
+                                <ProductCard
+                                    key={product.id}
+                                    product={product}
+                                    isWishlisted={wishlistIds.has(product.id)}
+                                />
                             ))}
                         </div>
                     )}

@@ -5,7 +5,7 @@ import { Product } from "@/lib/types";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Minus, Plus, ShoppingBag, Truck, Ruler } from "lucide-react";
+import { Heart, Minus, Plus, ShoppingBag, Truck, Ruler, Share2 } from "lucide-react";
 import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { addToCartServerAction } from "@/app/actions/cart-actions";
@@ -14,13 +14,20 @@ import { toast } from "sonner";
 
 interface ProductInfoProps {
     product: Product;
+    isWishlisted?: boolean;
 }
 
-export function ProductInfo({ product }: ProductInfoProps) {
+export function ProductInfo({ product, isWishlisted = false }: ProductInfoProps) {
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
     const [quantity, setQuantity] = useState(1);
     const [isAdding, setIsAdding] = useState(false);
+    const [isLiked, setIsLiked] = useState(isWishlisted);
     const addToCart = useStore((state) => state.addToCart);
+    const addToWishlist = useStore((state) => state.addToWishlist);
+    const removeFromWishlist = useStore((state) => state.removeFromWishlist);
+
+    // Sync isLiked state if prop changes (e.g. after server hydration)
+    // useEffect(() => setIsLiked(isWishlisted), [isWishlisted]); 
 
     const displayPrice = product.sale_price || product.price;
     const originalPrice = product.sale_price ? product.price : null;
@@ -55,6 +62,60 @@ export function ProductInfo({ product }: ProductInfoProps) {
             }
         } finally {
             setIsAdding(false);
+        }
+    };
+
+    const handleWishlist = async () => {
+        if (!isLiked) {
+            setIsLiked(true);
+            addToWishlist(product);
+            toast.success("Added to wishlist!");
+            try {
+                const { addToWishlistAction } = await import("@/app/actions/wishlist-actions");
+                const result = await addToWishlistAction(product.id);
+                if (!result.success) {
+                    setIsLiked(false);
+                    console.error("Wishlist API failed", result.error);
+                }
+            } catch (err) {
+                console.error(err);
+                setIsLiked(false);
+            }
+        } else {
+            setIsLiked(false);
+            removeFromWishlist(product.id);
+            toast.success("Removed from wishlist");
+            try {
+                const { removeFromWishlistAction } = await import("@/app/actions/wishlist-actions");
+                const result = await removeFromWishlistAction(product.id);
+                if (!result.success) {
+                    setIsLiked(true);
+                    console.error("Remove from wishlist failed", result.error);
+                }
+            } catch (err) {
+                console.error(err);
+                setIsLiked(true);
+            }
+        }
+    };
+
+    const handleShare = async () => {
+        const shareData = {
+            title: product.name,
+            text: `Check out ${product.name} on Rupali Collection!`,
+            url: window.location.href,
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                console.error("Error sharing:", err);
+            }
+        } else {
+            // Fallback to WhatsApp
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}`;
+            window.open(whatsappUrl, '_blank');
         }
     };
 
@@ -144,8 +205,22 @@ export function ProductInfo({ product }: ProductInfoProps) {
                     {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
                 </Button>
 
-                <Button variant="outline" size="icon" className="h-11 w-11">
-                    <Heart className="h-5 w-5" />
+                <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-11 w-11"
+                    onClick={handleWishlist}
+                >
+                    <Heart className={cn("h-5 w-5", isLiked && "fill-red-500 text-red-500")} />
+                </Button>
+
+                <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-11 w-11"
+                    onClick={handleShare}
+                >
+                    <Share2 className="h-5 w-5" />
                 </Button>
             </div>
 
