@@ -48,9 +48,12 @@ export function BottomNav() {
         { href: "/account", label: "Profile", icon: User, avatar: avatarUrl },
     ];
 
+    // Hide bottom nav on product details page to avoid overlap with sticky action bar
+    if (pathname.startsWith("/product/")) return null;
+
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/80 backdrop-blur-xl border-t border-white/20 pb-safe pt-2">
-            <div className="flex items-center justify-around">
+        <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-background/95 backdrop-blur-md border-t border-border/40 pb-safe shadow-[0_-1px_10px_rgba(0,0,0,0.02)]">
+            <div className="flex items-center justify-around px-2 pt-1.5 pb-1">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href;
 
@@ -58,13 +61,22 @@ export function BottomNav() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className="relative flex flex-col items-center justify-center py-2 px-4 w-16"
+                            className="relative flex flex-col items-center justify-center w-16 h-12 py-1"
                         >
-                            <div className="relative z-10">
+                            {/* Active pill background */}
+                            {isActive && (
+                                <motion.div
+                                    layoutId="navTab"
+                                    className="absolute inset-0 mx-auto my-auto h-8 w-12 rounded-full bg-primary/10 -z-10"
+                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                />
+                            )}
+
+                            <div className="relative">
                                 {item.avatar ? (
                                     <div className={cn(
                                         "relative h-6 w-6 overflow-hidden rounded-full border transition-all duration-300",
-                                        isActive ? "border-primary -translate-y-1" : "border-border"
+                                        isActive ? "border-primary scale-110" : "border-border"
                                     )}>
                                         <Image
                                             src={item.avatar}
@@ -76,8 +88,8 @@ export function BottomNav() {
                                 ) : (
                                     <item.icon
                                         className={cn(
-                                            "h-6 w-6 transition-all duration-300",
-                                            isActive ? "text-primary -translate-y-1" : "text-muted-foreground"
+                                            "h-5.5 w-5.5 transition-all duration-300",
+                                            isActive ? "text-primary" : "text-muted-foreground/70"
                                         )}
                                         strokeWidth={isActive ? 2.5 : 2}
                                     />
@@ -87,52 +99,27 @@ export function BottomNav() {
                                     <motion.span
                                         initial={{ scale: 0 }}
                                         animate={{ scale: 1 }}
-                                        className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground font-bold"
+                                        className="absolute -right-2 -top-2 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] text-white font-extrabold ring-2 ring-background"
                                     >
                                         {isMounted ? item.count : 0}
                                     </motion.span>
                                 ) : null}
                             </div>
 
-                            {isActive && (
-                                <motion.div
-                                    layoutId="bottomNavIndicator"
-                                    className="absolute inset-0 flex flex-col items-center justify-end pb-1"
-                                    initial={false}
-                                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                                >
-                                    {/* Soft glow separation or background pill if desired, here just a text label transition */}
-
-                                </motion.div>
-                            )}
-
-                            <motion.span
-                                animate={{
-                                    opacity: isActive ? 1 : 0.6,
-                                    scale: isActive ? 1 : 0.9,
-                                    fontWeight: isActive ? 600 : 400
-                                }}
+                            <span
                                 className={cn(
-                                    "text-[10px] mt-1 transition-colors duration-300",
-                                    isActive ? "text-primary" : "text-muted-foreground"
+                                    "text-[9px] mt-1 transition-all duration-300 tracking-tight",
+                                    isActive ? "text-primary font-bold" : "text-muted-foreground/60 font-medium"
                                 )}
                             >
                                 {item.label}
-                            </motion.span>
-
-                            {/* Active Indicator Dot */}
-                            {isActive && (
-                                <motion.div
-                                    layoutId="activeDot"
-                                    className="absolute top-0 h-1 w-8 rounded-b-full bg-primary"
-                                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                                />
-                            )}
+                            </span>
                         </Link>
                     );
                 })}
             </div>
-            <div className="h-[env(safe-area-inset-bottom)]" />
+            {/* Safe area padding for mobile browsers */}
+            <div className="h-[env(safe-area-inset-bottom)] bg-background/95" />
         </div>
     );
 }

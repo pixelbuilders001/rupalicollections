@@ -72,60 +72,47 @@ export default function OrdersPage() {
     }
 
     return (
-        <div className="min-h-screen bg-secondary/5 pb-20 pt-8 mt-16">
-            <div className="container mx-auto max-w-4xl px-4">
-                <div className="mb-8 flex items-center justify-between">
-                    <h1 className="font-serif text-3xl font-bold">My Orders</h1>
+        <div className="min-h-screen bg-secondary/5 pb-20 pt-4">
+            <div className="container mx-auto max-w-2xl px-4">
+                <div className="mb-6 flex items-center justify-between">
+                    <div>
+                        <h1 className="font-serif text-2xl font-bold md:text-3xl">My Orders</h1>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{orders.length} orders total</p>
+                    </div>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-4">
                     {orders.map((order, idx) => (
                         <motion.div
                             key={order.id}
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.1 }}
-                            className="overflow-hidden rounded-2xl border border-white/40 bg-white shadow-md"
+                            transition={{ delay: idx * 0.05 }}
+                            className="overflow-hidden rounded-2xl border border-white/40 bg-white shadow-sm transition-all active:scale-[0.98]"
                         >
-                            {/* Order Header */}
-                            <div className="border-b border-gray-100 bg-gray-50/50 p-4 sm:p-6">
-                                <div className="flex flex-wrap items-center justify-between gap-4">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Order ID</p>
-                                        <p className="font-mono text-sm font-medium">#{order.order_code || order.id.slice(0, 8).toUpperCase()}</p>
+                            {/* Order Header - Compact */}
+                            <div className="border-b border-gray-100 bg-gray-50/30 p-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-70">Order ID</p>
+                                        <p className="font-mono text-[11px] font-bold text-foreground">#{order.order_code || order.id.slice(0, 8).toUpperCase()}</p>
                                     </div>
-                                    <div className="flex items-center gap-6">
-                                        <div className="hidden sm:block">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Placed On</p>
-                                            <div className="flex items-center gap-1.5 text-sm font-medium">
-                                                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                                                {new Date(order.created_at).toLocaleDateString("en-IN", {
-                                                    day: "numeric",
-                                                    month: "short",
-                                                    year: "numeric"
-                                                })}
-                                            </div>
-                                        </div>
-                                        <div className="space-y-1 text-right">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</p>
-                                            <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${statusConfig[order.status in statusConfig ? order.status : 'pending'].bg} ${statusConfig[order.status in statusConfig ? order.status : 'pending'].color}`}>
-                                                {(() => {
-                                                    const status = order.status in statusConfig ? order.status : 'pending';
-                                                    const Config = statusConfig[status];
-                                                    return <Config.icon className="h-3 w-3" />;
-                                                })()}
-                                                {statusConfig[order.status in statusConfig ? order.status : 'pending'].label}
-                                            </div>
-                                        </div>
+                                    <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-tight ${statusConfig[order.status in statusConfig ? order.status : 'pending'].bg} ${statusConfig[order.status in statusConfig ? order.status : 'pending'].color}`}>
+                                        {(() => {
+                                            const status = order.status in statusConfig ? order.status : 'pending';
+                                            const Config = statusConfig[status];
+                                            return <Config.icon className="h-3 w-3" />;
+                                        })()}
+                                        {statusConfig[order.status in statusConfig ? order.status : 'pending'].label}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Order Items */}
-                            <div className="divide-y divide-gray-50">
+                            {/* Order Items - Tighter */}
+                            <div className="divide-y divide-gray-50/50">
                                 {order.items?.map((item) => (
-                                    <div key={item.id} className="flex gap-4 p-4 sm:p-6">
-                                        <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border bg-muted sm:h-24 sm:w-24">
+                                    <div key={item.id} className="flex gap-3 p-4">
+                                        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border bg-muted shadow-xs">
                                             {item.product?.thumbnail_url ? (
                                                 <Image
                                                     src={item.product.thumbnail_url}
@@ -135,67 +122,64 @@ export default function OrdersPage() {
                                                 />
                                             ) : (
                                                 <div className="flex h-full w-full items-center justify-center">
-                                                    <Package className="h-8 w-8 text-muted-foreground" />
+                                                    <Package className="h-6 w-6 text-muted-foreground/30" />
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="flex flex-1 flex-col justify-center">
-                                            <h3 className="text-sm font-bold sm:text-base">{item.product?.name}</h3>
-                                            <div className="mt-1 flex items-center gap-4 text-xs font-medium text-muted-foreground sm:text-sm">
-                                                <span>Qty: {item.qty}</span>
-                                                <span>•</span>
-                                                <span>{formatPrice(item.price)} each</span>
-                                            </div>
+                                        <div className="flex flex-1 flex-col justify-center gap-0.5">
+                                            <h3 className="text-xs font-bold leading-tight line-clamp-1">{item.product?.name}</h3>
+                                            <p className="text-[10px] font-medium text-muted-foreground">
+                                                Qty: {item.qty} • {formatPrice(item.price)}
+                                            </p>
                                         </div>
-                                        <div className="flex items-center text-sm font-bold sm:text-base">
+                                        <div className="flex items-center text-xs font-bold text-foreground">
                                             {formatPrice(item.price * item.qty)}
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
-                            {/* Order Footer */}
-                            <div className="bg-gray-50/30 p-4 sm:p-6 w-full">
-                                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                                    <div className="flex-1">
-                                        <div className="flex items-start gap-2 text-xs text-muted-foreground mb-4">
-                                            <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
-                                            <p className="italic">{order.address}</p>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2 justify-between">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-9 rounded-full border-primary/20 bg-primary/5 px-6 text-xs font-bold text-primary hover:bg-primary hover:text-white"
-                                                onClick={() => {
-                                                    setTrackingOrder(order);
-                                                    setIsTrackerOpen(true);
-                                                }}
-                                            >
-                                                Track Order
-                                            </Button>
-                                            {order.status?.toLowerCase() === 'created' && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="h-9 rounded-full border-red-200 bg-red-50 px-6 text-xs font-bold text-red-600 hover:bg-red-600 hover:text-white"
-                                                    onClick={() => handleCancelOrder(order.id)}
-                                                >
-                                                    Cancel
-                                                </Button>
-                                            )}
-                                        </div>
+                            {/* Order Footer - App Summary Style */}
+                            <div className="bg-gray-50/20 p-4">
+                                <div className="mb-4 flex items-center justify-between border-t border-gray-100 pt-3">
+                                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                                        <Calendar className="h-3 w-3" />
+                                        <span className="text-[10px] font-medium">
+                                            {new Date(order.created_at).toLocaleDateString("en-IN", {
+                                                day: "numeric",
+                                                month: "short",
+                                                year: "numeric"
+                                            })}
+                                        </span>
                                     </div>
-                                    <div className="flex items-center justify-between gap-6 border-t border-gray-100 pt-4 sm:border-0 sm:pt-0 shrink-0">
-                                        <div className="text-right">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-nowrap">Payment</p>
-                                            <p className="text-xs font-medium uppercase text-nowrap">{order.payment_method}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground text-nowrap">Total Paid</p>
-                                            <p className="text-lg font-black text-primary text-nowrap">{formatPrice(order.amount)}</p>
-                                        </div>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-60">Total Amount</span>
+                                        <span className="text-sm font-black text-primary">{formatPrice(order.amount)}</span>
                                     </div>
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-9 flex-1 rounded-xl border-primary/20 bg-primary/5 text-[11px] font-bold uppercase tracking-wider text-primary hover:bg-primary hover:text-white"
+                                        onClick={() => {
+                                            setTrackingOrder(order);
+                                            setIsTrackerOpen(true);
+                                        }}
+                                    >
+                                        Track Order
+                                    </Button>
+                                    {order.status?.toLowerCase() === 'created' && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-9 flex-1 rounded-xl border-red-100 bg-red-50 text-[11px] font-bold uppercase tracking-wider text-red-600 hover:bg-red-600 hover:text-white"
+                                            onClick={() => handleCancelOrder(order.id)}
+                                        >
+                                            Cancel
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>

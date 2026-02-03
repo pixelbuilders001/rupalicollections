@@ -28,16 +28,30 @@ export async function getCategories() {
 
 export async function getTrendingProducts(limit = 4) {
     const supabase = await createClient();
-    const { data, error } = await supabase
+
+    // First try to get featured products
+    let { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('is_active', true)
         .eq('is_featured', true)
         .limit(limit);
 
-    if (error) {
-        console.error("Error fetching trending products:", error);
-        return { success: false, error: error.message };
+    // Filter out error or empty data to fallback
+    if (error || !data || data.length === 0) {
+        // Fallback to most recent products if no featured ones
+        const { data: fallbackData, error: fallbackError } = await supabase
+            .from('products')
+            .select('*')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false })
+            .limit(limit);
+
+        if (fallbackError) {
+            console.error("Error fetching fallback trending products:", fallbackError);
+            return { success: false, error: fallbackError.message };
+        }
+        data = fallbackData;
     }
 
     return { success: true, data: data as Product[] };

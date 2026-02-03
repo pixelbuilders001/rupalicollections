@@ -64,68 +64,39 @@ export function Navbar() {
     }, [supabase]);
 
     return (
-        <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-md">
-            <div className="container mx-auto flex h-16 items-center justify-between px-4">
-                {/* Mobile Menu & Logo */}
-                <div className="flex items-center gap-4">
-                    <Link href="/" className="flex items-center gap-3">
-                        <div className="relative h-10 w-10 overflow-hidden rounded-full border border-primary/20 md:h-12 md:w-12">
-                            <Image
-                                src="/logo.png"
-                                alt="Rupali Collection"
-                                fill
-                                className="object-cover"
-                                priority
-                            />
-                        </div>
-                        <span className="font-serif text-xl font-bold tracking-tight text-primary">
-                            Rupali Collection
+        <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur-md transition-all">
+            <div className="container mx-auto flex h-14 items-center justify-between px-4">
+                {/* Logo Section */}
+                <Link href="/" className="flex items-center gap-2">
+                    <div className="relative h-8 w-8 overflow-hidden rounded-full border border-primary/20 shadow-sm">
+                        <Image
+                            src="/logo.png"
+                            alt="Rupali Collection"
+                            fill
+                            className="object-cover"
+                            priority
+                        />
+                    </div>
+                    <div className="flex flex-col -gap-1">
+                        <span className="font-serif text-[15px] font-black leading-tight text-primary">
+                            Rupali
                         </span>
-                    </Link>
-                </div>
+                        <span className="font-serif text-[10px] font-bold uppercase tracking-[0.2em] leading-tight text-primary/80">
+                            Collections
+                        </span>
+                    </div>
+                </Link>
 
-                {/* Desktop Nav */}
-                <nav className="hidden gap-8 md:flex">
-                    <Link href="/" className="text-sm font-medium hover:text-primary">
-                        Home
-                    </Link>
-                    <Link href="/shop" className="text-sm font-medium hover:text-primary">
-                        Shop
-                    </Link>
-                    <Link href="/about" className="text-sm font-medium hover:text-primary">
-                        Our Story
-                    </Link>
-                </nav>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon">
-                        <Search className="h-5 w-5" />
+                {/* Actions - Simplified */}
+                <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" className="h-9 w-9">
+                        <Search className="h-4.5 w-4.5 text-foreground/80" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="hidden md:flex">
-                        <Heart className="h-5 w-5" />
-                    </Button>
-                    {/* <Link href="/account">
-                        <Button variant="ghost" size="icon" className="overflow-hidden">
-                            {avatarUrl ? (
-                                <div className="relative h-6 w-6 overflow-hidden rounded-full border border-border">
-                                    <Image
-                                        src={avatarUrl}
-                                        alt="Profile"
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
-                            ) : (
-                                <User className="h-5 w-5" />
-                            )}
-                        </Button>
-                    </Link> */}
                     <Link href="/cart">
-                        <Button variant="ghost" size="icon" className="relative">
-                            <ShoppingBag className="h-5 w-5" />
+                        <Button variant="ghost" size="icon" className="relative h-9 w-9">
+                            <ShoppingBag className="h-4.5 w-4.5 text-foreground/80" />
                             {isMounted && cartCount > 0 && (
-                                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-extrabold text-white ring-2 ring-background">
                                     {cartCount}
                                 </span>
                             )}

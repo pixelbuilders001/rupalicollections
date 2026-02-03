@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Star, Truck, RefreshCw, ShieldCheck } from "lucide-react";
+import { ArrowRight, Star, Truck, RefreshCw, ShieldCheck, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { products, categories as fallbackCategories } from "@/lib/data";
@@ -29,7 +29,7 @@ export default function Home() {
         const [categoriesRes, trendingRes, arrivalsRes] = await Promise.all([
           getCategories(),
           getTrendingProducts(4),
-          getNewArrivals(4)
+          getNewArrivals(6)
         ]);
 
         if (categoriesRes.success && categoriesRes.data) {
@@ -55,139 +55,149 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-10 pb-10">
-      {/* Hero Section */}
-      <section className="relative h-[70vh] w-full overflow-hidden md:h-[80vh]">
-        <Image
-          src="/hero-image.png"
-          alt="Elegant Indian Fashion"
-          fill
-          className="object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-black/30 md:bg-black/20" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white p-4">
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="font-serif text-4xl font-bold md:text-6xl lg:text-7xl"
-          >
-            Elegance in Every Weave
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="mt-4 max-w-lg text-lg md:text-xl font-light"
-          >
-            Discover the finest collection of handcrafted Sarees, Kurtis, and Lehengas.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="mt-8"
-          >
-            <Button size="lg" className="rounded-full px-8 text-base bg-white text-black hover:bg-white/90">
-              Shop Collection
-            </Button>
-          </motion.div>
+    <div className="flex flex-col gap-8 pb-10 bg-background">
+      {/* Search Bar - App Style (Sticky or Top) */}
+      <div className="px-4 pt-2 -mb-4 md:hidden">
+        <div className="flex items-center gap-2 rounded-full bg-secondary/30 px-4 py-2 text-muted-foreground border border-border/50">
+          <Search className="h-4 w-4" />
+          <span className="text-sm">Search for products...</span>
+        </div>
+      </div>
+
+      {/* Hero Banner - Compact Mobile Style */}
+      <section className="px-4">
+        <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-muted md:aspect-[21/9]">
+          <Image
+            src="https://plus.unsplash.com/premium_photo-1682090811844-e0a89fb2c780?q=80&w=1170&auto=format&fit=crop"
+            alt="New Season Collection"
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
+          <div className="absolute inset-0 flex flex-col justify-center p-6 text-white">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-foreground/80">New Season</span>
+              <h1 className="mt-1 font-serif text-2xl font-bold md:text-4xl">
+                Spring / Summer <br /> '24 Collection
+              </h1>
+              <Link href="/shop" className="mt-4 block w-fit">
+                <Button size="sm" className="h-8 rounded-full bg-white px-4 text-[11px] font-bold text-black hover:bg-white/90">
+                  EXPLORE NOW
+                </Button>
+              </Link>
+            </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* Categories Carousel */}
-      <section className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-serif text-2xl font-bold text-foreground">Shop by Category</h2>
-        </div>
-        <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+      {/* Categories - Story Style (Circle Icons) */}
+      <section className="px-4">
+        <div className="flex gap-5 overflow-x-auto pb-2 scrollbar-hide snap-x">
           {categoriesLoading ? (
-            // Simple Loading Skeleton
-            [1, 2, 3, 4].map((i) => (
-              <div key={i} className="aspect-[3/4] min-w-[140px] flex-shrink-0 animate-pulse rounded-lg bg-secondary/50 md:min-w-[200px]" />
+            [1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex flex-col items-center gap-2 min-w-[70px] flex-shrink-0">
+                <div className="h-[64px] w-[64px] rounded-full bg-secondary/50 animate-pulse" />
+                <div className="h-2 w-10 bg-secondary/50 animate-pulse rounded" />
+              </div>
             ))
           ) : (
             categories.map((category) => (
               <Link
                 key={category.id}
                 href={`/shop?category=${category.slug}`}
-                className="relative aspect-[3/4] min-w-[140px] flex-shrink-0 snap-start overflow-hidden rounded-lg md:min-w-[200px]"
+                className="flex flex-col items-center gap-2 min-w-[70px] flex-shrink-0 snap-start"
               >
-                <Image
-                  src={category.image}
-                  alt={category.name}
-                  fill
-                  className="object-cover transition-transform hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                <div className="absolute bottom-3 left-3 text-white">
-                  <span className="font-medium text-lg">{category.name}</span>
+                <div className="relative h-[66px] w-[66px] overflow-hidden rounded-full border-2 border-primary/20 p-0.5 transition-transform active:scale-95">
+                  <div className="relative h-full w-full overflow-hidden rounded-full">
+                    <Image
+                      src={category.image}
+                      alt={category.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
                 </div>
+                <span className="text-[11px] font-medium text-foreground/80">{category.name}</span>
               </Link>
             ))
           )}
         </div>
       </section>
 
-      {/* Trending Section */}
-      <section className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-serif text-2xl font-bold text-foreground">Trending Now</h2>
-          <Link href="/shop" className="text-sm font-medium text-primary flex items-center gap-1">
-            View All <ArrowRight className="h-4 w-4" />
+      {/* Trending Now - Tighter Grid */}
+      <section className="px-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold tracking-tight text-foreground">Trending Now</h2>
+          <Link href="/shop" className="text-[11px] font-bold text-primary uppercase tracking-wider">
+            View All
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-8">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {productsLoading ? (
-            [1, 2, 3, 4].map(i => <div key={i} className="aspect-[3/4] animate-pulse rounded-lg bg-secondary/50" />)
+            [1, 2, 3, 4].map(i => <div key={i} className="aspect-[3/4] animate-pulse rounded-md bg-secondary/30" />)
           ) : trendingProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
       </section>
 
-      {/* Feature Banner */}
-      <section className="my-6 bg-secondary/30 py-12">
-        <div className="container mx-auto grid grid-cols-3 gap-4 px-2 text-center md:flex md:flex-row md:text-left md:justify-around md:gap-6">
-          <div className="flex flex-col items-center gap-2 md:items-start">
-            <div className="rounded-full bg-primary/10 p-2 md:p-3">
-              <Truck className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+      {/* Promotional Card / Middle Banner */}
+      <section className="px-4">
+        <div className="relative h-40 w-full overflow-hidden rounded-xl bg-primary/10">
+          <div className="flex h-full items-center justify-between px-8">
+            <div className="max-w-[180px]">
+              <span className="text-[10px] font-bold text-primary uppercase">Special Offer</span>
+              <h3 className="mt-1 font-serif text-xl font-bold leading-tight">Handcrafted Luxury Kurtis</h3>
+              <p className="mt-1 text-xs text-muted-foreground">FLAT 20% OFF today</p>
             </div>
-            <h3 className="font-semibold text-sm md:text-base">Free Shipping</h3>
-            <p className="hidden text-xs text-muted-foreground md:block">On all orders above ₹2999</p>
-          </div>
-          <div className="flex flex-col items-center gap-2 md:items-start">
-            <div className="rounded-full bg-primary/10 p-2 md:p-3">
-              <RefreshCw className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+            <div className="relative h-32 w-24 overflow-hidden rounded-lg shadow-xl shadow-primary/20 rotate-6">
+              <Image src="/hero-image.png" alt="Promo" fill className="object-cover" />
             </div>
-            <h3 className="font-semibold text-sm md:text-base">Easy Returns</h3>
-            <p className="hidden text-xs text-muted-foreground md:block">7-day hassle-free returns</p>
-          </div>
-          <div className="flex flex-col items-center gap-2 md:items-start">
-            <div className="rounded-full bg-primary/10 p-2 md:p-3">
-              <ShieldCheck className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-            </div>
-            <h3 className="font-semibold text-sm md:text-base">Secure Payment</h3>
-            <p className="hidden text-xs text-muted-foreground md:block">100% secure checkout</p>
           </div>
         </div>
       </section>
 
       {/* New Arrivals */}
-      <section className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-serif text-2xl font-bold text-foreground">New Arrivals</h2>
-          <Link href="/shop" className="text-sm font-medium text-primary flex items-center gap-1">
-            View All <ArrowRight className="h-4 w-4" />
+      <section className="px-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold tracking-tight text-foreground">New Arrivals</h2>
+          <Link href="/shop" className="text-[11px] font-bold text-primary uppercase tracking-wider">
+            View All
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-8">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:gap-6">
           {productsLoading ? (
-            [1, 2, 3, 4].map(i => <div key={i} className="aspect-[3/4] animate-pulse rounded-lg bg-secondary/50" />)
+            [1, 2, 3, 4].map(i => <div key={i} className="aspect-[3/4] animate-pulse rounded-md bg-secondary/30" />)
           ) : newArrivals.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
+        </div>
+      </section>
+
+      {/* Service Highlights - Minimal */}
+      <section className="mx-4 mt-4 grid grid-cols-3 gap-2 border-t border-border/50 pt-8 pb-4">
+        <div className="flex flex-col items-center gap-1.5 p-2 text-center">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/50">
+            <Truck className="h-4 w-4 text-primary" />
+          </div>
+          <span className="text-[10px] font-bold">Free Shipping</span>
+        </div>
+        <div className="flex flex-col items-center gap-1.5 p-2 text-center">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/50">
+            <RefreshCw className="h-4 w-4 text-primary" />
+          </div>
+          <span className="text-[10px] font-bold">7-Day Returns</span>
+        </div>
+        <div className="flex flex-col items-center gap-1.5 p-2 text-center">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary/50">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+          </div>
+          <span className="text-[10px] font-bold">100% Secure</span>
         </div>
       </section>
     </div>

@@ -100,47 +100,54 @@ function ShopContent() {
     }, [productsList, priceRange, sortBy]);
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <h1 className="font-serif text-3xl font-bold">
-                    {activeCategoryName}
-                </h1>
+        <div className="container mx-auto px-4 py-4 md:py-8">
+            <div className="mb-4 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="font-serif text-xl font-bold md:text-3xl">
+                            {activeCategoryName}
+                        </h1>
+                        <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">{filteredProducts.length} Products Found</p>
+                    </div>
 
-                <div className="flex items-center gap-2">
-                    <FilterSheet
-                        selectedCategory={selectedCategory}
-                        setSelectedCategory={setSelectedCategory}
-                        priceRange={priceRange}
-                        setPriceRange={setPriceRange}
-                    />
+                    <div className="flex items-center gap-1.5 pt-2">
+                        <FilterSheet
+                            selectedCategory={selectedCategory}
+                            setSelectedCategory={setSelectedCategory}
+                            priceRange={priceRange}
+                            setPriceRange={setPriceRange}
+                        />
 
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="gap-2">
-                                <ArrowUpDown className="h-4 w-4" /> Sort
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => setSortBy("popularity")}>Popularity</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setSortBy("newest")}>Newest Arrivals</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setSortBy("price-asc")}>Price: Low to High</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setSortBy("price-desc")}>Price: High to Low</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-8 gap-1.5 px-3 rounded-full text-[11px] font-bold uppercase tracking-wider bg-background">
+                                    <ArrowUpDown className="h-3.5 w-3.5" /> Sort
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 rounded-xl p-1 shadow-xl">
+                                <DropdownMenuItem className="text-xs rounded-lg py-2" onClick={() => setSortBy("popularity")}>Popularity</DropdownMenuItem>
+                                <DropdownMenuItem className="text-xs rounded-lg py-2" onClick={() => setSortBy("newest")}>Newest Arrivals</DropdownMenuItem>
+                                <DropdownMenuItem className="text-xs rounded-lg py-2" onClick={() => setSortBy("price-asc")}>Price: Low to High</DropdownMenuItem>
+                                <DropdownMenuItem className="text-xs rounded-lg py-2" onClick={() => setSortBy("price-desc")}>Price: High to Low</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </div>
             </div>
 
             <div className="flex gap-8">
                 <div className="w-full">
                     {loading ? (
-                        <FullPageLoader />
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                            {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="aspect-[3/4] animate-pulse rounded-md bg-secondary/30" />)}
+                        </div>
                     ) : filteredProducts.length === 0 ? (
                         <div className="flex h-64 flex-col items-center justify-center text-muted-foreground">
-                            <p>No products found matching your criteria.</p>
-                            <Button variant="link" onClick={() => { setSelectedCategory(null); setPriceRange([0, 100000]); }}>Clear Filters</Button>
+                            <p className="text-sm">No products found</p>
+                            <Button variant="link" className="text-xs" onClick={() => { setSelectedCategory(null); setPriceRange([0, 100000]); }}>Clear Filters</Button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4">
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 lg:gap-6">
                             {filteredProducts.map((product) => (
                                 <ProductCard
                                     key={product.id}

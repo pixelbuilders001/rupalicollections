@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Product } from "@/lib/types";
 import { formatPrice, calculateDiscount } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,8 @@ export function ProductInfo({ product, isWishlisted = false }: ProductInfoProps)
     const addToCart = useStore((state) => state.addToCart);
     const addToWishlist = useStore((state) => state.addToWishlist);
     const removeFromWishlist = useStore((state) => state.removeFromWishlist);
+    const cartCount = useStore((state) => state.cartCount());
+    const router = useRouter();
 
     // Sync isLiked state if prop changes (e.g. after server hydration)
     // useEffect(() => setIsLiked(isWishlisted), [isWishlisted]); 
@@ -119,131 +122,122 @@ export function ProductInfo({ product, isWishlisted = false }: ProductInfoProps)
         }
     };
 
-    return (
-        <div className="flex flex-col gap-6">
-            <div>
-                <h1 className="font-serif text-3xl font-bold text-foreground">{product.name}</h1>
-                <p className="text-muted-foreground">Premium Indian Collection</p>
 
-                <div className="mt-4 flex items-end gap-3">
-                    <span className="text-2xl font-bold">{formatPrice(displayPrice)}</span>
+    return (
+        <div className="flex flex-col gap-6 pb-24 md:pb-0">
+            <div>
+                <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Premium Collection</p>
+                    <div className="flex gap-2">
+                        <button onClick={handleShare} className="rounded-full bg-secondary/50 p-2 text-foreground/70 transition-colors active:bg-secondary">
+                            <Share2 className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+                <h1 className="mt-1 font-serif text-2xl font-bold leading-tight text-foreground md:text-4xl">{product.name}</h1>
+
+                <div className="mt-4 flex items-baseline gap-3">
+                    <span className="text-2xl font-bold text-foreground">{formatPrice(displayPrice)}</span>
                     {originalPrice && (
                         <>
-                            <span className="text-lg text-muted-foreground line-through">
+                            <span className="text-base text-muted-foreground line-through decoration-muted-foreground/60">
                                 {formatPrice(originalPrice)}
                             </span>
-                            <Badge variant="destructive" className="ml-2">
-                                -{discount}% OFF
-                            </Badge>
+                            <span className="text-sm font-bold text-green-600">
+                                ({discount}% OFF)
+                            </span>
                         </>
                     )}
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">Inclusive of all taxes</p>
+                <p className="mt-0.5 text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Inclusive of all taxes</p>
             </div>
 
             {/* Attributes */}
-            <div className="space-y-4">
-                {/* Size */}
+            <div className="space-y-6">
+                {/* Size Selection */}
                 {product.sizes && product.sizes.length > 0 && (
-                    <div>
-                        <div className="flex justify-between mb-2">
-                            <span className="font-semibold">Select Size</span>
-                            <button className="flex items-center gap-1 text-xs text-primary underline">
-                                <Ruler className="h-3 w-3" /> Size Chart
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold uppercase tracking-wider text-foreground select-none">Select Size</span>
+                            <button className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+                                <Ruler className="h-3 w-3" /> Size Guide
                             </button>
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-3">
                             {product.sizes.map((size) => (
                                 <button
                                     key={size}
                                     onClick={() => setSelectedSize(size)}
                                     className={cn(
-                                        "flex h-10 w-10 items-center justify-center rounded-full border text-sm transition-all",
+                                        "flex h-12 w-12 items-center justify-center rounded-full border text-sm font-medium transition-all duration-300",
                                         selectedSize === size
-                                            ? "border-primary bg-primary text-primary-foreground"
-                                            : "border-input bg-background hover:border-primary"
+                                            ? "border-primary bg-primary text-white shadow-lg shadow-primary/30"
+                                            : "border-border bg-background text-foreground/70 hover:border-primary active:scale-90"
                                     )}
                                 >
                                     {size}
                                 </button>
                             ))}
                         </div>
-                        {!selectedSize && <p className="mt-1 text-xs text-red-500">Please select a size</p>}
+                        {!selectedSize && <p className="text-[10px] font-medium text-red-500 animate-pulse">Choose your size to proceed</p>}
                     </div>
                 )}
-
-                {/* Quantity */}
-                {/* Disabled for now, keep simple single add or simple counter */}
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-4 sticky bottom-0 bg-background md:static py-4 md:py-0 border-t md:border-t-0 z-20">
-                <div className="flex items-center rounded-md border">
-                    <button
-                        className="h-10 w-10 flex items-center justify-center hover:bg-muted"
-                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    >
-                        <Minus className="h-4 w-4" />
-                    </button>
-                    <span className="w-10 text-center text-sm font-medium">{quantity}</span>
-                    <button
-                        className="h-10 w-10 flex items-center justify-center hover:bg-muted"
-                        onClick={() => setQuantity(quantity + 1)}
-                    >
-                        <Plus className="h-4 w-4" />
-                    </button>
+            {/* Description & Details - Mini Accordion style or just clean flow */}
+            <div className="space-y-6 border-t pt-6">
+                <div className="space-y-2">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Product Details</h3>
+                    <p className="text-[13px] leading-relaxed text-muted-foreground">
+                        {product.description}
+                    </p>
                 </div>
 
-                <Button
-                    className="flex-1 gap-2"
-                    size="lg"
-                    onClick={handleAddToCart}
-                    disabled={product.stock === 0}
-                    loading={isAdding}
-                >
-                    <ShoppingBag className="h-5 w-5" />
-                    {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
-                </Button>
+                <div className="grid grid-cols-2 gap-4 rounded-xl bg-secondary/20 p-4">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Fabric</span>
+                        <span className="text-xs font-medium">{product.fabric || "Premium Silk"}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Occasion</span>
+                        <span className="text-xs font-medium">Festive / Party</span>
+                    </div>
+                </div>
+            </div>
 
+            {/* Sticky Bottom Actions - The Mobile App "Buy" Bar */}
+            <div className="fixed bottom-0 left-0 right-0 z-50 flex items-center gap-3 border-t bg-background/95 p-4 pb-safe backdrop-blur-md md:static md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none transition-all">
                 <Button
                     variant="outline"
                     size="icon"
-                    className="h-11 w-11"
+                    className={cn(
+                        "h-12 w-14 shrink-0 rounded-xl transition-all active:scale-95",
+                        isLiked ? "border-red-100 bg-red-50 text-red-500" : "border-border bg-background"
+                    )}
                     onClick={handleWishlist}
                 >
-                    <Heart className={cn("h-5 w-5", isLiked && "fill-red-500 text-red-500")} />
+                    <Heart className={cn("h-5 w-5", isLiked && "fill-current")} />
                 </Button>
 
-                <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-11 w-11"
-                    onClick={handleShare}
-                >
-                    <Share2 className="h-5 w-5" />
-                </Button>
-            </div>
-
-            {/* Details */}
-            <div className="space-y-4 rounded-lg bg-secondary/20 p-4 text-sm">
-                <div className="flex gap-2">
-                    <span className="font-semibold min-w-[80px]">Fabric:</span>
-                    <span>{product.fabric || "Silk / Georgette Mix"}</span>
+                <div className="flex flex-1 gap-2">
+                    <Button
+                        variant="secondary"
+                        className="h-12 flex-1 rounded-xl text-xs font-bold uppercase tracking-widest transition-all active:scale-95"
+                        onClick={handleAddToCart}
+                        disabled={product.stock === 0}
+                        loading={isAdding}
+                    >
+                        Add to Bag
+                    </Button>
+                    <Button
+                        className="h-12 flex-1 rounded-xl text-xs font-bold uppercase tracking-widest shadow-lg shadow-primary/25 transition-all active:scale-95"
+                        size="lg"
+                        disabled={product.stock === 0 || cartCount === 0}
+                        onClick={() => router.push("/cart")}
+                    >
+                        Buy Now
+                    </Button>
                 </div>
-                <div className="flex gap-2">
-                    <span className="font-semibold min-w-[80px]">Fit:</span>
-                    <span>Regular Fit</span>
-                </div>
-                <div className="flex gap-2">
-                    <span className="font-semibold min-w-[80px]">Delivery:</span>
-                    <span className="flex items-center gap-1 text-green-600">
-                        <Truck className="h-3 w-3" /> Dispatched in 2-3 business days
-                    </span>
-                </div>
-            </div>
-
-            <div className="text-sm text-muted-foreground leading-relaxed">
-                {product.description}
             </div>
         </div>
     );
