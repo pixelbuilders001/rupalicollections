@@ -3,6 +3,7 @@ import { getWishlistIdsAction } from "@/app/actions/wishlist-actions";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductInfo } from "@/components/product/ProductInfo";
 import { RelatedProducts } from "@/components/product/RelatedProducts";
+import { ReviewList } from "@/components/reviews/ReviewList";
 import { notFound } from "next/navigation";
 import { Product } from "@/lib/types";
 import { Metadata } from "next";
@@ -69,6 +70,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </div>
             )}
 
+            {/* Reviews Section */}
+            <div className="mt-16 border-t pt-10">
+                <h2 className="font-serif text-2xl font-bold mb-8">Customer Reviews</h2>
+                <ReviewList productId={typedProduct.id} />
+            </div>
+
             {/* Related Products Section */}
             <RelatedProducts
                 categoryId={typedProduct.category_id}
@@ -77,3 +84,4 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
     );
 }
+

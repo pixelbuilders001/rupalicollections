@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { getOrdersAction, cancelOrderAction } from "@/app/actions/order-actions";
-import { Order } from "@/lib/types";
+import { getUserReviews } from "@/app/actions/reviews";
+import { Order, ProductReview } from "@/lib/types";
 import { formatPrice } from "@/lib/utils";
 import { Package, Clock, CheckCircle2, Truck, XCircle, ChevronRight, MapPin, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { OrderTracker } from "@/components/orders/OrderTracker";
 import { BackButton } from "@/components/common/BackButton";
+import { ReviewDialog } from "@/components/reviews/ReviewDialog";
 
 const statusConfig = {
     pending: { icon: Clock, color: "text-amber-600", bg: "bg-amber-50", label: "Pending" },
@@ -23,15 +25,30 @@ const statusConfig = {
 
 export default function OrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
+    const [userReviews, setUserReviews] = useState<Record<string, ProductReview>>({});
     const [loading, setLoading] = useState(true);
     const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
     const [isTrackerOpen, setIsTrackerOpen] = useState(false);
+
     const fetchOrders = async () => {
         setLoading(true);
-        const result = await getOrdersAction();
-        if (result.success && result.data) {
-            setOrders(result.data);
+        const [ordersResult, reviewsResult] = await Promise.all([
+            getOrdersAction(),
+            getUserReviews()
+        ]);
+
+        if (ordersResult.success && ordersResult.data) {
+            setOrders(ordersResult.data);
         }
+
+        if (reviewsResult) {
+            const reviewsMap = reviewsResult.reduce((acc, review) => {
+                acc[review.order_item_id] = review;
+                return acc;
+            }, {} as Record<string, ProductReview>);
+            setUserReviews(reviewsMap);
+        }
+
         setLoading(false);
     };
 
@@ -135,8 +152,28 @@ export default function OrdersPage() {
                                                 Qty: {item.qty} • {formatPrice(item.price)}
                                             </p>
                                         </div>
-                                        <div className="flex items-center text-xs font-bold text-foreground">
-                                            {formatPrice(item.price * item.qty)}
+                                        <div className="flex flex-col items-end gap-2">
+                                            <div className="text-xs font-bold text-foreground">
+                                                {formatPrice(item.price * item.qty)}
+                                            </div>
+                                            {order.status === 'delivered' && (
+                                                <ReviewDialog
+                                                    productId={item.product_id}
+                                                    orderId={order.id}
+                                                    orderItemId={item.id}
+                                                    mode={userReviews[item.id] ? 'edit' : 'create'}
+                                                    initialData={userReviews[item.id] ? {
+                                                        rating: userReviews[item.id].rating,
+                                                        title: userReviews[item.id].title || '',
+                                                        review: userReviews[item.id].review || ''
+                                                    } : undefined}
+                                                    onSuccess={fetchOrders}
+                                                >
+                                                    <Button variant="outline" size="sm" className="h-7 text-[10px]">
+                                                        {userReviews[item.id] ? 'Edit Review' : 'Write Review'}
+                                                    </Button>
+                                                </ReviewDialog>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

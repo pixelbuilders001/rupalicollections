@@ -103,7 +103,7 @@ export function OrderTracker({ order, open, onOpenChange }: OrderTrackerProps) {
                                                 "text-sm font-bold capitalize leading-tight",
                                                 isFirst ? "text-foreground" : "text-muted-foreground"
                                             )}>
-                                                {item.status}
+                                                {item.status.replace(/_/g, ' ')}
                                             </p>
                                             <p className="text-[10px] font-bold text-primary/60">
                                                 {new Date(item.created_at).toLocaleDateString("en-IN", {
@@ -113,7 +113,7 @@ export function OrderTracker({ order, open, onOpenChange }: OrderTrackerProps) {
                                             </p>
                                         </div>
                                         <p className="text-[12px] text-muted-foreground leading-snug pr-4">
-                                            {item.note || `Order status updated to ${item.status}`}
+                                            {item.note || `Order status updated to ${item.status.replace(/_/g, ' ')}`}
                                         </p>
                                         <p className="mt-1 text-[10px] font-medium text-muted-foreground/60">
                                             {new Date(item.created_at).toLocaleTimeString("en-IN", {

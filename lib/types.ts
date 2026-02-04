@@ -94,3 +94,22 @@ export interface OrderItem {
     selectedSize?: string;
     selectedColor?: string;
 }
+
+export interface ProductReview {
+    id: string;
+    product_id: string;
+    order_id: string;
+    order_item_id: string;
+    user_id: string;
+    rating: number;
+    title?: string;
+    review?: string;
+    status: 'pending' | 'approved' | 'rejected';
+    created_at: string;
+    updated_at: string;
+    user?: {
+        full_name: string;
+        avatar_url?: string;
+    };
+}
+
