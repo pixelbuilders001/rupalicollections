@@ -56,7 +56,7 @@ export default function WishlistPage() {
     return (
         <div className="min-h-screen bg-secondary/5 pb-20 pt-8 mt-16">
             <div className="container mx-auto px-4">
-                <BackButton className="mb-4" showLabel label="Back" />
+                {/* <BackButton className="mb-4" showLabel label="Back" /> */}
                 <div className="mb-8 flex items-center justify-between">
                     <div>
                         <h1 className="font-serif text-3xl font-bold">My Wishlist</h1>

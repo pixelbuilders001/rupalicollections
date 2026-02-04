@@ -13,7 +13,11 @@ export async function checkServiceabilityAction(pincode: string) {
         const data = await response.json();
 
         if (!data || data[0].Status === "Error") {
-            return { success: false, error: "Invalid pincode or data not found" };
+            return {
+                success: true,
+                serviceable: false,
+                message: "We do not deliver to this pincode"
+            };
         }
 
         const district = data[0].PostOffice[0].District;

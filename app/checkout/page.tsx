@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/select";
 import { confirmOrderAction } from "../actions/order-actions";
 import { BackButton } from "@/components/common/BackButton";
+import { checkServiceabilityAction } from "@/app/actions/pincode-actions";
+import { Check, AlertCircle } from "lucide-react";
 
 export default function CheckoutPage() {
     const { cartTotal, clearCart, serviceablePincode, serviceableCity, serviceableState } = useStore();
@@ -35,6 +37,10 @@ export default function CheckoutPage() {
     const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
     const [saveForLater, setSaveForLater] = useState(true);
     const [paymentMethod, setPaymentMethod] = useState<"upi" | "cod">("upi");
+
+    // Pincode serviceability state
+    const [pincodeStatus, setPincodeStatus] = useState<"unchecked" | "checking" | "serviceable" | "unserviceable">("unchecked");
+    const [pincodeMessage, setPincodeMessage] = useState("");
 
     // New address form state
     const [formData, setFormData] = useState({
@@ -85,6 +91,10 @@ export default function CheckoutPage() {
                 city: serviceableCity || prev.city,
                 state: serviceableState || prev.state
             }));
+            // If pincode is pre-filled from product page, mark as serviceable
+            if (serviceablePincode) {
+                setPincodeStatus("serviceable");
+            }
         }
     }, [serviceablePincode, serviceableCity, serviceableState]);
 
@@ -101,6 +111,10 @@ export default function CheckoutPage() {
                 state: addr.state || "",
                 pincode: addr.pincode || "",
             });
+            // Check serviceability for the selected address pincode
+            if (addr.pincode) {
+                handlePincodeCheck(addr.pincode);
+            }
         }
     };
 
@@ -108,11 +122,54 @@ export default function CheckoutPage() {
     const delivery = total > 2999 ? 0 : 99;
     const finalTotal = total + delivery;
 
+    const handlePincodeCheck = async (pincodeToCheck?: string) => {
+        const checkPincode = pincodeToCheck || formData.pincode;
+
+        if (!checkPincode || checkPincode.length !== 6) {
+            toast.error("Please enter a valid 6-digit pincode");
+            return;
+        }
+
+        setPincodeStatus("checking");
+        const result = await checkServiceabilityAction(checkPincode);
+
+        if (result.success) {
+            if (result.serviceable) {
+                setPincodeStatus("serviceable");
+                setPincodeMessage(result.message || "");
+
+                // Update city and state if provided
+                if (result.city || result.state) {
+                    setFormData(prev => ({
+                        ...prev,
+                        city: result.city || prev.city,
+                        state: result.state || prev.state
+                    }));
+                }
+
+                toast.success(result.message || "Delivery available to this pincode");
+            } else {
+                setPincodeStatus("unserviceable");
+                setPincodeMessage(result.message || "");
+                toast.error(result.message || "Delivery not available to this pincode");
+            }
+        } else {
+            setPincodeStatus("unchecked");
+            toast.error(result.error || "Failed to check serviceability");
+        }
+    };
+
     const handlePlaceOrder = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!formData.full_name || !formData.phone || !formData.address_line_1 || !formData.city || !formData.state || !formData.pincode) {
             toast.error("Please fill in all shipping details");
+            return;
+        }
+
+        // Check if pincode serviceability has been verified
+        if (pincodeStatus !== "serviceable") {
+            toast.error("Please verify pincode serviceability before placing order");
             return;
         }
 
@@ -281,17 +338,53 @@ export default function CheckoutPage() {
                                         }}
                                         className={cn("h-10 text-sm", !!serviceableCity && "bg-secondary/20")}
                                     />
-                                    <Input
-                                        required
-                                        placeholder="PIN Code"
-                                        value={formData.pincode}
-                                        onChange={(e) => {
-                                            setFormData({ ...formData, pincode: e.target.value });
-                                            setSelectedAddressId(null);
-                                        }}
-                                        className="h-10 text-sm"
-                                    />
+                                    <div className="relative">
+                                        <Input
+                                            required
+                                            placeholder="PIN Code"
+                                            value={formData.pincode}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                                                setFormData({ ...formData, pincode: val });
+                                                setSelectedAddressId(null);
+                                                if (pincodeStatus !== "unchecked") setPincodeStatus("unchecked");
+
+                                                // Auto-check when 6 digits are entered
+                                                if (val.length === 6) {
+                                                    handlePincodeCheck(val);
+                                                }
+                                            }}
+                                            className={cn(
+                                                "h-10 text-sm pr-10",
+                                                pincodeStatus === "serviceable" ? "border-green-200 ring-green-500/10" :
+                                                    pincodeStatus === "unserviceable" ? "border-red-200 ring-red-500/10" : ""
+                                            )}
+                                        />
+                                        {pincodeStatus === "checking" && (
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center">
+                                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                            </div>
+                                        )}
+                                        {pincodeStatus === "serviceable" && <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />}
+                                        {pincodeStatus === "unserviceable" && <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />}
+                                    </div>
                                 </div>
+
+
+                                {/* Serviceability Message */}
+                                {pincodeStatus !== "unchecked" && pincodeMessage && (
+                                    <motion.p
+                                        initial={{ opacity: 0, y: -5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className={cn(
+                                            "text-[11px] font-bold tracking-tight",
+                                            pincodeStatus === "serviceable" ? "text-green-600" : "text-red-500"
+                                        )}
+                                    >
+                                        {pincodeMessage}
+                                    </motion.p>
+                                )}
+
                                 <Input
                                     required
                                     placeholder="State"
@@ -421,7 +514,7 @@ export default function CheckoutPage() {
                 <p className="text-[9px] text-center text-muted-foreground mt-6 uppercase tracking-widest opacity-60">
                     SSL Secure Payment • 100% Genuine Products
                 </p>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

@@ -92,9 +92,16 @@ export default function CartPage() {
     const [isCheckingOut, setIsCheckingOut] = useState(false);
     const router = useRouter();
 
-    const handleCheckout = () => {
+    const handleCheckout = async () => {
         setIsCheckingOut(true);
-        router.push("/checkout");
+        const { data: { session } } = await createClient().auth.getSession();
+
+        if (!session) {
+            router.push("/login?returnTo=/cart");
+        } else {
+            router.push("/checkout");
+        }
+        setIsCheckingOut(false);
     };
 
     if (!isMounted) return null;

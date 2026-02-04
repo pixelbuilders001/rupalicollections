@@ -29,7 +29,8 @@ export async function GET(request: Request) {
         )
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
-            return NextResponse.redirect(`${origin}${next}`)
+            // Redirect to a client-side page that will handle cart merge
+            return NextResponse.redirect(`${origin}/auth/merge-cart?next=${encodeURIComponent(next)}`)
         }
     }
 
