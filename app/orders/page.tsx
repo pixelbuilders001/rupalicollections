@@ -18,6 +18,7 @@ const statusConfig = {
     shipped: { icon: Truck, color: "text-purple-600", bg: "bg-purple-50", label: "Shipped" },
     delivered: { icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50", label: "Delivered" },
     cancelled: { icon: XCircle, color: "text-red-600", bg: "bg-red-50", label: "Cancelled" },
+    return_initiated: { icon: Clock, color: "text-orange-600", bg: "bg-orange-50", label: "Return Requested" },
 };
 
 export default function OrdersPage() {
@@ -166,11 +167,15 @@ export default function OrdersPage() {
                                         size="sm"
                                         className="h-9 flex-1 rounded-xl border-primary/20 bg-primary/5 text-[11px] font-bold uppercase tracking-wider text-primary hover:bg-primary hover:text-white"
                                         onClick={() => {
-                                            setTrackingOrder(order);
-                                            setIsTrackerOpen(true);
+                                            if (order.status === 'delivered') {
+                                                window.location.href = `/return/${order.id}`;
+                                            } else {
+                                                setTrackingOrder(order);
+                                                setIsTrackerOpen(true);
+                                            }
                                         }}
                                     >
-                                        Track Order
+                                        {order.status === 'delivered' ? 'Return Item' : 'Track Order'}
                                     </Button>
                                     {order.status?.toLowerCase() === 'created' && (
                                         <Button

@@ -91,4 +91,6 @@ export interface OrderItem {
     price: number;
     created_at: string;
     product?: Product;
+    selectedSize?: string;
+    selectedColor?: string;
 }
