@@ -31,6 +31,12 @@ export const metadata: Metadata = {
   authors: [{ name: "Rupali Collection" }],
   creator: "Rupali Collection",
   publisher: "Rupali Collection",
+  appleWebApp: {
+    capable: true,
+    title: "Rupali Collection",
+    statusBarStyle: "default",
+  },
+  applicationName: "Rupali Collection",
   formatDetection: {
     email: false,
     address: false,

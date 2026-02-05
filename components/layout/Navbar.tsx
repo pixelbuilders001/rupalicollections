@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, Search, Heart, User } from "lucide-react";
+import { ShoppingBag, Search, Heart, User, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 import { useEffect, useState, useCallback } from "react";
@@ -11,6 +11,7 @@ import { getCartServerAction } from "@/app/actions/cart-actions";
 import { getUserProfile } from "@/app/actions/user-actions";
 import { usePathname } from "next/navigation";
 import { BackButton } from "../common/BackButton";
+import { usePWAInstall } from "@/lib/hooks/usePWAInstall";
 
 import { GlobalSearch } from "./GlobalSearch";
 
@@ -24,6 +25,7 @@ export function Navbar() {
     const supabase = createClient();
     const pathname = usePathname();
     const isHome = pathname === "/";
+    const { isInstalled, isVisible, handleInstallClick } = usePWAInstall();
 
     const syncCart = useCallback(async () => {
         const result = await getCartServerAction();
@@ -110,6 +112,19 @@ export function Navbar() {
                 {/* Actions - Simplified */}
                 <div className="flex items-center gap-1">
                     <GlobalSearch showTrigger={!isHome} />
+
+                    {!isInstalled && isMounted && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-primary animate-pulse active:scale-95 transition-all"
+                            onClick={handleInstallClick}
+                            title="Download App"
+                        >
+                            <Download className="h-4.5 w-4.5" />
+                        </Button>
+                    )}
+
                     <Link href="/cart">
                         <Button variant="ghost" size="icon" className="relative h-9 w-9">
                             <ShoppingBag className="h-4.5 w-4.5 text-foreground/80" />

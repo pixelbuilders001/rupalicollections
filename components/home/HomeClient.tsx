@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { Product } from "@/lib/types";
 import { getCategories, getTrendingProducts, getNewArrivals } from "@/app/actions/product-actions";
 import { useStore } from "@/lib/store";
+import { PWAInstallBanner } from "@/components/common/PWAInstallBanner";
 
 export function HomeClient() {
     const [categories, setCategories] = useState<any[]>(fallbackCategories);
@@ -177,6 +178,10 @@ export function HomeClient() {
                     ))}
                 </div>
             </section>
+
+            <div className="px-4">
+                <PWAInstallBanner />
+            </div>
 
             {/* Service Highlights - Minimal */}
             <section className="mx-4 mt-4 grid grid-cols-3 gap-2 border-t border-border/50 pt-8 pb-4">
