@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
 import { BackButton } from "@/components/common/BackButton";
+import { getURL } from "@/lib/utils";
 
 export default function LoginPage() {
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -19,7 +20,7 @@ export default function LoginPage() {
         await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(returnTo)}`,
+                redirectTo: `${getURL()}auth/callback?next=${encodeURIComponent(returnTo)}`,
             },
         });
     };

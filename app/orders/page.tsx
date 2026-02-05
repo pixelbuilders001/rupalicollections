@@ -144,13 +144,13 @@ export default function OrdersPage() {
                                             <div className="flex items-center justify-between mb-0.5">
                                                 <h3 className="text-xs font-bold leading-tight line-clamp-1">{item.product?.name}</h3>
                                                 {(() => {
-                                                    const itemStatus = item.status || order.status;
+                                                    const itemStatus = item.status
                                                     const status = (itemStatus && itemStatus in statusConfig ? itemStatus : 'pending') as keyof typeof statusConfig;
                                                     const Config = statusConfig[status];
                                                     return (
                                                         <div className={`flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tight ${Config.bg} ${Config.color}`}>
-                                                            <Config.icon className="h-2 w-2" />
-                                                            {Config.label}
+                                                            {/* <Config.icon className="h-2 w-2" /> */}
+                                                            {itemStatus?.replace(/_/g, ' ')}
                                                         </div>
                                                     );
                                                 })()}
