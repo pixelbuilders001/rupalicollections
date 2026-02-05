@@ -35,10 +35,11 @@ export function ProductCard({ product, isWishlisted = false, onRemove }: Product
             <div className="relative aspect-[3/4] overflow-hidden bg-muted">
                 <Image
                     src={imgSrc}
-                    alt={product.name}
+                    alt={`${product.name} - Premium Indian Ethnic Wear | Rupali Collection`}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                     sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                    priority={false}
                     onError={() => setImgSrc("https://images.unsplash.com/photo-1560393464-5c69a73c5770?q=80&w=800&auto=format&fit=crop")}
                 />
                 {/* Discount Badge - Mini */}

@@ -25,14 +25,37 @@ export async function generateMetadata(
     }
 
     const product = result.data;
+    const price = product.sale_price || product.price;
+    const baseUrl = "https://rupalicollection.com";
+    const productUrl = `${baseUrl}/product/${product.id}`;
 
     return {
-        title: product.name,
-        description: product.description?.slice(0, 160),
+        title: `${product.name} | Rupali Collection`,
+        description: product.description?.slice(0, 160) || `Buy ${product.name} online at Rupali Collection. Premium quality Indian Ethnic Wear.`,
+        keywords: [product.name, "Indian Fashion", "Ethnic Wear", product.category_id || "Clothing"],
         openGraph: {
             title: product.name,
             description: product.description?.slice(0, 160),
+            url: productUrl,
+            siteName: "Rupali Collection",
+            images: product.thumbnail_url ? [
+                {
+                    url: product.thumbnail_url,
+                    width: 800,
+                    height: 1000,
+                    alt: product.name,
+                }
+            ] : [],
+            type: "article",
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: product.name,
+            description: product.description?.slice(0, 160),
             images: product.thumbnail_url ? [product.thumbnail_url] : [],
+        },
+        alternates: {
+            canonical: productUrl,
         },
     };
 }
@@ -53,12 +76,40 @@ export default async function ProductPage({ params }: ProductPageProps) {
         ? wishlistResult.data.includes(typedProduct.id)
         : false;
 
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": typedProduct.name,
+        "image": typedProduct.thumbnail_url,
+        "description": typedProduct.description,
+        "sku": typedProduct.sku || typedProduct.id,
+        "offers": {
+            "@type": "Offer",
+            "url": `https://rupalicollection.com/product/${typedProduct.id}`,
+            "priceCurrency": typedProduct.currency || "INR",
+            "price": typedProduct.sale_price || typedProduct.price,
+            "availability": typedProduct.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            "seller": {
+                "@type": "Organization",
+                "name": "Rupali Collection"
+            }
+        }
+    };
+
     return (
         <div className="bg-background min-h-screen">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <div className="container mx-auto px-0 md:px-4 md:py-8">
                 <div className="grid gap-0 md:gap-12 lg:gap-20 md:grid-cols-2">
                     <div className="w-full">
-                        <ProductGallery images={typedProduct.images} thumbnail={typedProduct.thumbnail_url} />
+                        <ProductGallery
+                            images={typedProduct.images}
+                            thumbnail={typedProduct.thumbnail_url}
+                            productName={typedProduct.name}
+                        />
                     </div>
 
                     <div className="px-5 pt-4 md:px-0 md:pt-0">

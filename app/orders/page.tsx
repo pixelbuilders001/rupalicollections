@@ -150,7 +150,7 @@ export default function OrdersPage() {
                                 {order.items?.map((item, itemIdx) => (
                                     <div key={item.id} className={cn(
                                         "p-4 rounded-[1.8rem] transition-colors",
-                                        itemIdx !== order.items.length - 1 && "mb-2"
+                                        itemIdx !== (order.items?.length ?? 0) - 1 && "mb-2"
                                     )}>
                                         <div className="flex gap-4">
                                             <div className="relative h-20 w-16 flex-shrink-0 overflow-hidden rounded-2xl bg-secondary/10 border border-secondary/10 shadow-sm">

@@ -8,9 +8,10 @@ import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 interface ProductGalleryProps {
     images?: string[];
     thumbnail?: string;
+    productName?: string;
 }
 
-export function ProductGallery({ images = [], thumbnail }: ProductGalleryProps) {
+export function ProductGallery({ images = [], thumbnail, productName = "Product" }: ProductGalleryProps) {
     const displayImages = images.length > 0 ? images : (thumbnail ? [thumbnail] : []);
     const [selectedImage, setSelectedImage] = useState(0);
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -53,7 +54,7 @@ export function ProductGallery({ images = [], thumbnail }: ProductGalleryProps) 
                         <div key={index} className="relative h-full w-full flex-shrink-0 snap-center">
                             <Image
                                 src={img}
-                                alt={`Product View ${index + 1}`}
+                                alt={`${productName} - View ${index + 1} | Rupali Collection`}
                                 fill
                                 className="object-cover"
                                 priority={index === 0}
@@ -112,7 +113,7 @@ export function ProductGallery({ images = [], thumbnail }: ProductGalleryProps) 
                         >
                             <Image
                                 src={img}
-                                alt={`Thumbnail ${index + 1}`}
+                                alt={`${productName} Thumbnail ${index + 1}`}
                                 fill
                                 className="object-cover"
                                 sizes="80px"
