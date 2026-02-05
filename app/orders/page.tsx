@@ -15,6 +15,7 @@ import { BackButton } from "@/components/common/BackButton";
 import { ReviewDialog } from "@/components/reviews/ReviewDialog";
 
 const statusConfig = {
+    created: { icon: Clock, color: "text-amber-600", bg: "bg-amber-50", label: "Pending" },
     pending: { icon: Clock, color: "text-amber-600", bg: "bg-amber-50", label: "Pending" },
     processing: { icon: Clock, color: "text-blue-600", bg: "bg-blue-50", label: "Processing" },
     shipped: { icon: Truck, color: "text-purple-600", bg: "bg-purple-50", label: "Shipped" },
@@ -144,7 +145,7 @@ export default function OrdersPage() {
                                                 <h3 className="text-xs font-bold leading-tight line-clamp-1">{item.product?.name}</h3>
                                                 {(() => {
                                                     const itemStatus = item.status || order.status;
-                                                    const status = itemStatus in statusConfig ? itemStatus : 'pending';
+                                                    const status = (itemStatus && itemStatus in statusConfig ? itemStatus : 'pending') as keyof typeof statusConfig;
                                                     const Config = statusConfig[status];
                                                     return (
                                                         <div className={`flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tight ${Config.bg} ${Config.color}`}>
