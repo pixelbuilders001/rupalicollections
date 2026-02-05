@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { getOrdersAction, cancelOrderAction } from "@/app/actions/order-actions";
 import { getUserReviews } from "@/app/actions/reviews";
 import { Order, ProductReview } from "@/lib/types";
-import { formatPrice } from "@/lib/utils";
-import { Package, Clock, CheckCircle2, Truck, XCircle, ChevronRight, MapPin, Calendar } from "lucide-react";
+import { formatPrice, cn } from "@/lib/utils";
+import { Package, Clock, CheckCircle2, Truck, XCircle, ChevronRight, MapPin, Calendar, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
@@ -71,197 +71,209 @@ export default function OrdersPage() {
 
     if (loading) {
         return (
-            <div className="flex h-[80vh] items-center justify-center">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+            <div className="flex h-[80vh] items-center justify-center bg-background">
+                <div className="relative">
+                    <div className="h-12 w-12 rounded-full border-4 border-primary/10 border-t-primary animate-spin"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <Package className="h-4 w-4 text-primary/40" />
+                    </div>
+                </div>
             </div>
         );
     }
 
     if (orders.length === 0) {
         return (
-            <div className="flex min-h-[70vh] flex-col items-center justify-center p-4 text-center">
-                <div className="mb-6 rounded-full bg-muted p-6">
-                    <Package className="h-12 w-12 text-muted-foreground" />
+            <div className="flex min-h-[80vh] flex-col items-center justify-center p-8 text-center bg-background">
+                <div className="relative mb-8">
+                    <div className="h-32 w-32 rounded-full bg-secondary/10 flex items-center justify-center">
+                        <Package className="h-14 w-14 text-muted-foreground/40" />
+                    </div>
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-1 -right-1 h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white"
+                    >
+                        <ShoppingBag className="h-5 w-5 fill-current" />
+                    </motion.div>
                 </div>
-                <h1 className="font-serif text-3xl font-bold">No Orders Yet</h1>
-                <p className="mt-2 text-muted-foreground">You haven't placed any orders yet. Start shopping to see them here!</p>
-                <Link href="/shop" className="mt-8">
-                    <Button size="lg" className="rounded-full px-8">Browse Collection</Button>
+                <h1 className="font-serif text-2xl font-black uppercase tracking-tight">No orders yet</h1>
+                <p className="mt-2 text-xs font-medium text-muted-foreground uppercase tracking-widest max-w-[240px] leading-relaxed">
+                    You haven't placed any orders yet. Start your fashion journey with us today.
+                </p>
+                <Link href="/shop" className="mt-10 w-full max-w-[200px]">
+                    <Button className="w-full h-14 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-primary/20">
+                        Explore Shop
+                    </Button>
                 </Link>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-secondary/5 pb-20 pt-4">
+        <div className="min-h-screen bg-secondary/5 pb-24 pt-6">
             <div className="container mx-auto max-w-2xl px-4">
-                {/* <BackButton className="mb-4" showLabel label="Back" /> */}
-                <div className="mb-6 flex items-center justify-between">
-                    <div>
-                        <h1 className="font-serif text-2xl font-bold md:text-3xl">My Orders</h1>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{orders.length} orders total</p>
-                    </div>
+                <div className="mb-6">
+                    <h1 className="font-serif text-3xl font-black uppercase tracking-tight text-foreground">My Orders</h1>
+                    <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{orders.length} {orders.length === 1 ? 'Booking' : 'Bookings'} Total</p>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                     {orders.map((order, idx) => (
                         <motion.div
                             key={order.id}
-                            initial={{ opacity: 0, y: 15 }}
+                            initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.05 }}
-                            className="overflow-hidden rounded-2xl border border-white/40 bg-white shadow-sm transition-all active:scale-[0.98]"
+                            transition={{ delay: idx * 0.05, duration: 0.4 }}
+                            className="overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/80 backdrop-blur-sm shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)]"
                         >
-                            {/* Order Header - Compact */}
-                            <div className="border-b border-gray-100 bg-gray-50/30 p-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-0.5">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-70">Order ID</p>
-                                        <p className="font-mono text-[11px] font-bold text-foreground">#{order.order_code || order.id.slice(0, 8).toUpperCase()}</p>
-                                    </div>
+                            {/* Order Header - Subtitle Style */}
+                            <div className="bg-secondary/5 px-6 py-4 flex items-center justify-between border-b border-secondary/10">
+                                <div className="flex flex-col">
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Order Reference</span>
+                                    <span className="font-mono text-xs font-black text-foreground">#{order.order_code || order.id.slice(0, 8).toUpperCase()}</span>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">Ordered On</span>
+                                    <span className="text-[11px] font-bold text-foreground">
+                                        {new Date(order.created_at).toLocaleDateString("en-IN", {
+                                            day: "numeric",
+                                            month: "short",
+                                            year: "numeric"
+                                        })}
+                                    </span>
                                 </div>
                             </div>
 
-                            {/* Order Items - Tighter */}
-                            <div className="divide-y divide-gray-50/50">
-                                {order.items?.map((item) => (
-                                    <div key={item.id} className="flex gap-3 p-4">
-                                        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border bg-muted shadow-xs">
-                                            {item.product?.thumbnail_url ? (
-                                                <Image
-                                                    src={item.product.thumbnail_url}
-                                                    alt={item.product.name}
-                                                    fill
-                                                    className="object-cover"
-                                                />
-                                            ) : (
-                                                <div className="flex h-full w-full items-center justify-center">
-                                                    <Package className="h-6 w-6 text-muted-foreground/30" />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex flex-1 flex-col justify-center gap-0.5">
-                                            <div className="flex items-center justify-between mb-0.5">
-                                                <h3 className="text-xs font-bold leading-tight line-clamp-1">{item.product?.name}</h3>
-                                                {(() => {
-                                                    const itemStatus = item.status
-                                                    const status = (itemStatus && itemStatus in statusConfig ? itemStatus : 'pending') as keyof typeof statusConfig;
-                                                    const Config = statusConfig[status];
-                                                    return (
-                                                        <div className={`flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tight ${Config.bg} ${Config.color}`}>
-                                                            {/* <Config.icon className="h-2 w-2" /> */}
-                                                            {itemStatus?.replace(/_/g, ' ')}
-                                                        </div>
-                                                    );
-                                                })()}
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <p className="text-[10px] font-medium text-muted-foreground">
-                                                    Qty: {item.qty} • {formatPrice(item.price)}
-                                                </p>
-                                                <div className="text-xs font-bold text-foreground">
-                                                    {formatPrice(item.price * item.qty)}
-                                                </div>
+                            {/* Order Items */}
+                            <div className="px-2 pt-2">
+                                {order.items?.map((item, itemIdx) => (
+                                    <div key={item.id} className={cn(
+                                        "p-4 rounded-[1.8rem] transition-colors",
+                                        itemIdx !== order.items.length - 1 && "mb-2"
+                                    )}>
+                                        <div className="flex gap-4">
+                                            <div className="relative h-20 w-16 flex-shrink-0 overflow-hidden rounded-2xl bg-secondary/10 border border-secondary/10 shadow-sm">
+                                                {item.product?.thumbnail_url ? (
+                                                    <Image
+                                                        src={item.product.thumbnail_url}
+                                                        alt={item.product.name}
+                                                        fill
+                                                        className="object-cover"
+                                                        sizes="80px"
+                                                    />
+                                                ) : (
+                                                    <div className="flex h-full w-full items-center justify-center">
+                                                        <Package className="h-6 w-6 text-muted-foreground/30" />
+                                                    </div>
+                                                )}
                                             </div>
 
-                                            <div className="mt-2 flex flex-wrap gap-2">
-                                                {/* Local status for logic (item status takes precedence) */}
-                                                {(() => {
-                                                    const itemStatus = item.status || order.status;
-                                                    const isCancelled = itemStatus === 'cancelled';
-                                                    if (isCancelled) return null;
+                                            <div className="flex flex-1 flex-col py-0.5">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div>
+                                                        <h3 className="text-xs font-black uppercase tracking-tight line-clamp-1 leading-tight">{item.product?.name}</h3>
+                                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                                                            Qty: <span className="text-foreground">{item.qty}</span> • {formatPrice(item.price)}
+                                                        </p>
+                                                    </div>
 
-                                                    const isDelivered = itemStatus === 'delivered';
-                                                    const canCancel = itemStatus?.toLowerCase() === 'created' || itemStatus?.toLowerCase() === 'pending';
+                                                    {(() => {
+                                                        const itemStatus = item.status || 'pending';
+                                                        const status = (itemStatus in statusConfig ? itemStatus : 'pending') as keyof typeof statusConfig;
+                                                        const Config = statusConfig[status];
+                                                        return (
+                                                            <div className={cn(
+                                                                "px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-tighter border",
+                                                                Config.bg, Config.color, "border-current/10"
+                                                            )}>
+                                                                {itemStatus.replace(/_/g, ' ')}
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </div>
 
-                                                    return (
-                                                        <>
-                                                            {/* Write Review - Delivered only */}
-                                                            {isDelivered && (
-                                                                <ReviewDialog
-                                                                    productId={item.product_id}
-                                                                    orderId={order.id}
-                                                                    orderItemId={item.id}
-                                                                    mode={userReviews[item.id] ? 'edit' : 'create'}
-                                                                    initialData={userReviews[item.id] ? {
-                                                                        rating: userReviews[item.id].rating,
-                                                                        title: userReviews[item.id].title || '',
-                                                                        review: userReviews[item.id].review || ''
-                                                                    } : undefined}
-                                                                    onSuccess={fetchOrders}
-                                                                >
-                                                                    <Button variant="outline" size="sm" className="h-7 rounded-lg border-primary/20 bg-primary/5 px-3 text-[9px] font-bold uppercase tracking-wider text-primary hover:bg-primary hover:text-white">
-                                                                        {userReviews[item.id] ? 'Edit Review' : 'Write Review'}
-                                                                    </Button>
-                                                                </ReviewDialog>
-                                                            )}
+                                                {/* Action Buttons - Refined & Minimalistic */}
+                                                <div className="mt-4 flex flex-wrap gap-2">
+                                                    {(() => {
+                                                        const itemStatus = item.status || order.status;
+                                                        const isCancelled = itemStatus === 'cancelled';
+                                                        if (isCancelled) return null;
 
-                                                            {/* Return Item - Delivered only */}
-                                                            {isDelivered && (
-                                                                <Link href={`/return/${order.id}?itemId=${item.id}`} className="flex-1 min-w-[80px]">
-                                                                    <Button variant="outline" size="sm" className="h-7 w-full rounded-lg border-orange-200 bg-orange-50 px-3 text-[9px] font-bold uppercase tracking-wider text-orange-600 hover:bg-orange-600 hover:text-white">
-                                                                        Return item
-                                                                    </Button>
-                                                                </Link>
-                                                            )}
+                                                        const isDelivered = itemStatus === 'delivered';
+                                                        const canCancel = itemStatus?.toLowerCase() === 'created' || itemStatus?.toLowerCase() === 'pending';
 
-                                                            {/* Track Item - Show always unless it's just created (no history) or if we want to allow tracking cancelled items too */}
-                                                            {itemStatus !== 'created' && (
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="h-7 flex-1 rounded-lg border-primary/20 bg-primary/5 px-3 text-[9px] font-bold uppercase tracking-wider text-primary hover:bg-primary hover:text-white"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        setTrackingOrder(order);
-                                                                        setTrackingItemId(item.id);
-                                                                        setIsTrackerOpen(true);
-                                                                    }}
-                                                                >
-                                                                    Track item
-                                                                </Button>
-                                                            )}
+                                                        return (
+                                                            <>
+                                                                {itemStatus !== 'created' && (
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setTrackingOrder(order);
+                                                                            setTrackingItemId(item.id);
+                                                                            setIsTrackerOpen(true);
+                                                                        }}
+                                                                        className="h-8 flex-1 rounded-xl border border-primary/10 bg-white px-3 text-[9px] font-black uppercase tracking-widest text-primary transition-all active:scale-[0.97] hover:bg-primary/5 shadow-sm"
+                                                                    >
+                                                                        Track Status
+                                                                    </button>
+                                                                )}
 
-                                                            {/* Cancel Item - Created/Pending only */}
-                                                            {canCancel && (
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="h-7 flex-1 rounded-lg border-red-100 bg-red-50 px-3 text-[9px] font-bold uppercase tracking-wider text-red-600 hover:bg-red-600 hover:text-white"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleCancelOrder(order.id, item.id);
-                                                                    }}
-                                                                >
-                                                                    Cancel
-                                                                </Button>
-                                                            )}
-                                                        </>
-                                                    );
-                                                })()}
+                                                                {isDelivered && (
+                                                                    <div className="flex-1 min-w-[140px] flex gap-2">
+                                                                        <ReviewDialog
+                                                                            productId={item.product_id}
+                                                                            orderId={order.id}
+                                                                            orderItemId={item.id}
+                                                                            mode={userReviews[item.id] ? 'edit' : 'create'}
+                                                                            initialData={userReviews[item.id] ? {
+                                                                                rating: userReviews[item.id].rating,
+                                                                                title: userReviews[item.id].title || '',
+                                                                                review: userReviews[item.id].review || ''
+                                                                            } : undefined}
+                                                                            onSuccess={fetchOrders}
+                                                                        >
+                                                                            <button className="h-8 flex-1 rounded-xl border border-secondary/20 bg-white px-3 text-[9px] font-black uppercase tracking-widest text-foreground/70 transition-all active:scale-[0.97] hover:bg-secondary/5">
+                                                                                {userReviews[item.id] ? 'Edit Review' : 'Review'}
+                                                                            </button>
+                                                                        </ReviewDialog>
+
+                                                                        <Link href={`/return/${order.id}?itemId=${item.id}`} className="flex-1">
+                                                                            <button className="h-8 w-full rounded-xl border border-orange-200 bg-white px-3 text-[9px] font-black uppercase tracking-widest text-orange-600 transition-all active:scale-[0.97] hover:bg-orange-50">
+                                                                                Return
+                                                                            </button>
+                                                                        </Link>
+                                                                    </div>
+                                                                )}
+
+                                                                {canCancel && (
+                                                                    <button
+                                                                        onClick={() => handleCancelOrder(order.id, item.id)}
+                                                                        className="h-8 rounded-xl border border-red-100 bg-white px-4 text-[9px] font-black uppercase tracking-widest text-red-500 transition-all active:scale-[0.97] hover:bg-red-50"
+                                                                    >
+                                                                        Cancel
+                                                                    </button>
+                                                                )}
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
-                            {/* Order Footer - App Summary Style */}
-                            <div className="bg-gray-50/20 p-4">
-                                <div className="flex items-center justify-between border-t border-gray-100 pt-3">
-                                    <div className="flex items-center gap-1.5 text-muted-foreground">
-                                        <Calendar className="h-3 w-3" />
-                                        <span className="text-[10px] font-medium">
-                                            {new Date(order.created_at).toLocaleDateString("en-IN", {
-                                                day: "numeric",
-                                                month: "short",
-                                                year: "numeric"
-                                            })}
-                                        </span>
+                            {/* Order Footer - Subtle Summary */}
+                            <div className="px-6 py-5 bg-white border-t border-secondary/5 mt-2 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="h-8 w-8 rounded-full bg-secondary/5 flex items-center justify-center">
+                                        <MapPin className="h-3.5 w-3.5 text-muted-foreground/60" />
                                     </div>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-60">Total Amount</span>
-                                        <span className="text-sm font-black text-primary">{formatPrice(order.amount)}</span>
-                                    </div>
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Address Verified</span>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/40 leading-none mb-1">Total Paid</span>
+                                    <span className="text-xl font-black text-primary leading-none">{formatPrice(order.amount)}</span>
                                 </div>
                             </div>
                         </motion.div>

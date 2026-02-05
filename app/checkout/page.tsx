@@ -6,7 +6,7 @@ import { cn, formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, ArrowRight, MapPin, Plus, Loader2 } from "lucide-react";
+import { CheckCircle2, ArrowRight, MapPin, Plus, Loader2, ShoppingBag, Truck, Check, AlertCircle, QrCode } from "lucide-react";
 import { getAddresses, saveAddress } from "@/app/actions/address-actions";
 import { Address } from "@/lib/types";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,7 +23,14 @@ import {
 import { confirmOrderAction } from "../actions/order-actions";
 import { BackButton } from "@/components/common/BackButton";
 import { checkServiceabilityAction } from "@/app/actions/pincode-actions";
-import { Check, AlertCircle } from "lucide-react";
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
 
 export default function CheckoutPage() {
     const { cartTotal, clearCart, serviceablePincode, serviceableCity, serviceableState } = useStore();
@@ -41,6 +48,9 @@ export default function CheckoutPage() {
     // Pincode serviceability state
     const [pincodeStatus, setPincodeStatus] = useState<"unchecked" | "checking" | "serviceable" | "unserviceable">("unchecked");
     const [pincodeMessage, setPincodeMessage] = useState("");
+    const [isQRSheetOpen, setIsQRSheetOpen] = useState(false);
+
+
 
     // New address form state
     const [formData, setFormData] = useState({
@@ -52,7 +62,11 @@ export default function CheckoutPage() {
         state: "",
         pincode: "",
     });
-
+    useEffect(() => {
+        if (formData.pincode && formData.pincode.length === 6 && pincodeStatus === "unchecked") {
+            handlePincodeCheck(formData.pincode);
+        }
+    }, [formData.pincode]);
     useEffect(() => {
         const fetchSaved = async () => {
             const result = await getAddresses();
@@ -173,6 +187,11 @@ export default function CheckoutPage() {
             return;
         }
 
+        if (paymentMethod === "upi" && !isQRSheetOpen) {
+            setIsQRSheetOpen(true);
+            return;
+        }
+
         setIsPlacingOrder(true);
 
         try {
@@ -240,281 +259,374 @@ export default function CheckoutPage() {
     }
 
     return (
-        <div className="min-h-screen bg-secondary/5 pb-16 pt-6">
+        <div className="min-h-screen bg-secondary/5 pb-32 md:pb-16 pt-4">
             <div className="container mx-auto px-4 max-w-2xl">
-                <BackButton className="mb-4" showLabel label="Back" />
+                {/* <div className="mb-6 flex items-center gap-4">
+                    <BackButton />
+                    <div>
+                        <h1 className="font-serif text-2xl font-bold">Checkout</h1>
+                        <p className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Order Ref: RC-{Math.floor(1000 + Math.random() * 9000)}</p>
+                    </div>
+                </div> */}
 
-
-                <form onSubmit={handlePlaceOrder} className="space-y-6">
-
+                <form onSubmit={handlePlaceOrder} className="space-y-4">
                     {/* Shipping Section */}
-                    <div className="rounded-2xl border border-white/40 bg-white shadow-lg p-6">
-                        <div className="mb-6 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="rounded-lg bg-primary/10 p-1.5 text-primary">
-                                    <MapPin className="h-5 w-5" />
-                                </div>
-                                <h2 className="font-serif text-lg font-bold">Shipping Address</h2>
+                    <div className="rounded-2xl border border-white/40 bg-white shadow-sm overflow-hidden">
+                        <div className="p-4 border-b bg-secondary/10 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <MapPin className="h-4 w-4 text-primary" />
+                                <h2 className="text-sm font-bold uppercase tracking-wider">Shipping Address</h2>
                             </div>
+                            {savedAddresses.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedAddressId(null)}
+                                    className="text-[10px] font-bold text-primary uppercase"
+                                >
+                                    {selectedAddressId ? "Add New" : "Reset"}
+                                </button>
+                            )}
                         </div>
 
-                        {loading ? (
-                            <div className="flex h-40 items-center justify-center">
-                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {savedAddresses.length > 0 && (
-                                    <div className="mb-2">
-                                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1.5 block">
-                                            Select Saved Address
-                                        </label>
-                                        <Select value={selectedAddressId || ""} onValueChange={handleAddressSelect}>
-                                            <SelectTrigger className="w-full bg-secondary/5 border-primary/10 h-10">
-                                                <SelectValue placeholder="Choose a saved address..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {savedAddresses.map((addr) => (
-                                                    <SelectItem key={addr.id} value={addr.id}>
-                                                        {addr.full_name} - {addr.city}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )}
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Input
-                                        required
-                                        placeholder="Full Name"
-                                        value={formData.full_name}
-                                        onChange={(e) => {
-                                            setFormData({ ...formData, full_name: e.target.value });
-                                            setSelectedAddressId(null);
-                                        }}
-                                        className="h-10 text-sm"
-                                    />
-                                    <Input
-                                        required
-                                        type="tel"
-                                        placeholder="Phone Number"
-                                        value={formData.phone}
-                                        onChange={(e) => {
-                                            setFormData({ ...formData, phone: e.target.value });
-                                            setSelectedAddressId(null);
-                                        }}
-                                        className="h-10 text-sm"
-                                    />
+                        <div className="p-4">
+                            {loading ? (
+                                <div className="flex h-40 items-center justify-center">
+                                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
                                 </div>
-                                <Input
-                                    required
-                                    placeholder="Address Line 1"
-                                    value={formData.address_line_1}
-                                    onChange={(e) => {
-                                        setFormData({ ...formData, address_line_1: e.target.value });
-                                        setSelectedAddressId(null);
-                                    }}
-                                    className="h-10 text-sm"
-                                />
-                                <Input
-                                    placeholder="Address Line 2 (Optional)"
-                                    value={formData.address_line_2}
-                                    onChange={(e) => {
-                                        setFormData({ ...formData, address_line_2: e.target.value });
-                                        setSelectedAddressId(null);
-                                    }}
-                                    className="h-10 text-sm"
-                                />
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Input
-                                        required
-                                        placeholder="City"
-                                        value={formData.city}
-                                        disabled={!!serviceableCity}
-                                        onChange={(e) => {
-                                            setFormData({ ...formData, city: e.target.value });
-                                            setSelectedAddressId(null);
-                                        }}
-                                        className={cn("h-10 text-sm", !!serviceableCity && "bg-secondary/20")}
-                                    />
-                                    <div className="relative">
-                                        <Input
-                                            required
-                                            placeholder="PIN Code"
-                                            value={formData.pincode}
-                                            onChange={(e) => {
-                                                const val = e.target.value.replace(/\D/g, "").slice(0, 6);
-                                                setFormData({ ...formData, pincode: val });
-                                                setSelectedAddressId(null);
-                                                if (pincodeStatus !== "unchecked") setPincodeStatus("unchecked");
+                            ) : (
+                                <div className="space-y-4">
+                                    {savedAddresses.length > 0 && !selectedAddressId && (
+                                        <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar -mx-1 px-1">
+                                            {savedAddresses.map((addr) => (
+                                                <button
+                                                    key={addr.id}
+                                                    type="button"
+                                                    onClick={() => handleAddressSelect(addr.id)}
+                                                    className={cn(
+                                                        "flex-shrink-0 w-64 text-left p-4 rounded-xl border-2 transition-all",
+                                                        selectedAddressId === addr.id
+                                                            ? "border-primary bg-primary/5 shadow-md"
+                                                            : "border-gray-100 hover:border-primary/30"
+                                                    )}
+                                                >
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <p className="font-bold text-sm truncate">{addr.full_name}</p>
+                                                        {addr.is_default && <Badge variant="secondary" className="text-[8px] h-4">Default</Badge>}
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground line-clamp-2 mb-1">{addr.address_line_1}, {addr.address_line_2}</p>
+                                                    <p className="text-xs font-bold">{addr.city}, {addr.pincode}</p>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
 
-                                                // Auto-check when 6 digits are entered
-                                                if (val.length === 6) {
-                                                    handlePincodeCheck(val);
-                                                }
-                                            }}
-                                            className={cn(
-                                                "h-10 text-sm pr-10",
-                                                pincodeStatus === "serviceable" ? "border-green-200 ring-green-500/10" :
-                                                    pincodeStatus === "unserviceable" ? "border-red-200 ring-red-500/10" : ""
-                                            )}
-                                        />
-                                        {pincodeStatus === "checking" && (
-                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center">
-                                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                    {selectedAddressId && (
+                                        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 flex justify-between items-center mb-4">
+                                            <div>
+                                                <p className="font-bold text-sm">{formData.full_name}</p>
+                                                <p className="text-xs text-muted-foreground">{formData.address_line_1}, {formData.city}</p>
+                                                <div className="mt-2 flex items-center gap-2">
+                                                    <span className="text-[10px] font-black bg-white px-2 py-0.5 rounded-full shadow-sm border text-primary uppercase">
+                                                        Deliver to: {formData.pincode}
+                                                    </span>
+                                                    {pincodeStatus === "serviceable" && <Check className="h-3 w-3 text-green-500" />}
+                                                </div>
                                             </div>
-                                        )}
-                                        {pincodeStatus === "serviceable" && <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />}
-                                        {pincodeStatus === "unserviceable" && <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500" />}
-                                    </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedAddressId(null)}
+                                                className="h-8 px-3 rounded-lg border text-[10px] font-bold uppercase tracking-wider bg-white active:bg-gray-50 transition-colors"
+                                            >
+                                                Change
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {(!selectedAddressId || savedAddresses.length === 0) && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: "auto" }}
+                                            className="space-y-3"
+                                        >
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Full Name</label>
+                                                    <Input
+                                                        required
+                                                        placeholder="Name"
+                                                        value={formData.full_name}
+                                                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                                        className="h-11 rounded-xl bg-secondary/5 border-transparent focus:bg-white transition-all text-sm"
+                                                    />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Phone</label>
+                                                    <Input
+                                                        required
+                                                        type="tel"
+                                                        placeholder="Number"
+                                                        value={formData.phone}
+                                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                        className="h-11 rounded-xl bg-secondary/5 border-transparent focus:bg-white transition-all text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-1">
+                                                <label className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Address Details</label>
+                                                <Input
+                                                    required
+                                                    placeholder="House No., Building, Area"
+                                                    value={formData.address_line_1}
+                                                    onChange={(e) => setFormData({ ...formData, address_line_1: e.target.value })}
+                                                    className="h-11 rounded-xl bg-secondary/5 border-transparent focus:bg-white transition-all text-sm"
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] font-bold uppercase text-muted-foreground ml-1">PIN Code</label>
+                                                    <div className="relative">
+                                                        <Input
+                                                            required
+                                                            placeholder="6 Digits"
+                                                            value={formData.pincode}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                                                                setFormData({ ...formData, pincode: val });
+                                                                if (pincodeStatus !== "unchecked") setPincodeStatus("unchecked");
+                                                                if (val.length === 6) handlePincodeCheck(val);
+                                                            }}
+                                                            className={cn(
+                                                                "h-11 rounded-xl bg-secondary/5 border-transparent focus:bg-white transition-all text-sm pr-10",
+                                                                pincodeStatus === "serviceable" && "border-green-200 bg-green-50/30",
+                                                                pincodeStatus === "unserviceable" && "border-red-200 bg-red-50/30"
+                                                            )}
+                                                        />
+                                                        {pincodeStatus === "checking" && (
+                                                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                                            </div>
+                                                        )}
+                                                        {pincodeStatus === "serviceable" && <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />}
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] font-bold uppercase text-muted-foreground ml-1">City</label>
+                                                    <Input
+                                                        required
+                                                        placeholder="City"
+                                                        value={formData.city}
+                                                        disabled={!!serviceableCity}
+                                                        className="h-11 rounded-xl bg-secondary/5 border-transparent disabled:opacity-50 text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {pincodeStatus === "unserviceable" && (
+                                                <p className="text-[10px] font-bold text-red-500 bg-red-50 p-2 rounded-lg flex items-center gap-2">
+                                                    <AlertCircle className="h-3 w-3" /> {pincodeMessage}
+                                                </p>
+                                            )}
+
+                                            <div className="flex items-center gap-2 pt-2 px-1">
+                                                <Checkbox
+                                                    id="save_later"
+                                                    checked={saveForLater}
+                                                    onCheckedChange={(checked) => setSaveForLater(!!checked)}
+                                                />
+                                                <label htmlFor="save_later" className="text-[11px] font-medium text-muted-foreground">
+                                                    Save address for future orders
+                                                </label>
+                                            </div>
+                                        </motion.div>
+                                    )}
                                 </div>
-
-
-                                {/* Serviceability Message */}
-                                {pincodeStatus !== "unchecked" && pincodeMessage && (
-                                    <motion.p
-                                        initial={{ opacity: 0, y: -5 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        className={cn(
-                                            "text-[11px] font-bold tracking-tight",
-                                            pincodeStatus === "serviceable" ? "text-green-600" : "text-red-500"
-                                        )}
-                                    >
-                                        {pincodeMessage}
-                                    </motion.p>
-                                )}
-
-                                <Input
-                                    required
-                                    placeholder="State"
-                                    value={formData.state}
-                                    disabled={!!serviceableState}
-                                    onChange={(e) => {
-                                        setFormData({ ...formData, state: e.target.value });
-                                        setSelectedAddressId(null);
-                                    }}
-                                    className={cn("h-10 text-sm", !!serviceableState && "bg-secondary/20")}
-                                />
-
-                                <div className="flex items-center gap-2 pt-1">
-                                    <Checkbox
-                                        id="save_later"
-                                        checked={saveForLater}
-                                        onCheckedChange={(checked) => setSaveForLater(!!checked)}
-                                    />
-                                    <label htmlFor="save_later" className="text-xs font-medium cursor-pointer text-muted-foreground">
-                                        Save this address for later
-                                    </label>
-                                </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
 
-                    {/* Order Summary (Moved up) */}
-                    <div className="rounded-2xl border border-white/40 bg-white shadow-lg p-6">
-                        <h2 className="font-serif text-lg font-bold mb-4 border-b pb-3">Order Summary</h2>
+                    {/* Order Summary */}
+                    <div className="rounded-2xl border border-white/40 bg-white shadow-sm overflow-hidden">
+                        <div className="p-4 border-b bg-secondary/10 flex items-center gap-2">
+                            <ShoppingBag className="h-4 w-4 text-primary" />
+                            <h2 className="text-sm font-bold uppercase tracking-wider">Order Summary</h2>
+                        </div>
+                        <div className="p-4">
+                            <div className="space-y-4 mb-4">
+                                {useStore.getState().items.map((item) => (
+                                    <div key={item.cartId} className="flex gap-4 items-center">
+                                        <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border bg-white shadow-sm">
+                                            <img
+                                                src={item.thumbnail_url}
+                                                alt={item.name}
+                                                className="h-full w-full object-cover"
+                                            />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-[11px] font-bold uppercase truncate">{item.name}</h3>
+                                            <p className="text-[9px] text-muted-foreground font-medium uppercase mt-0.5">
+                                                Size: {item.selectedSize} • Qty: {item.quantity}
+                                            </p>
+                                            <p className="text-xs font-black mt-1 text-primary">{formatPrice(item.price * item.quantity)}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
 
-                        <div className="space-y-4 mb-6">
-                            {useStore.getState().items.map((item) => (
-                                <div key={item.cartId} className="flex gap-4">
-                                    <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border border-white bg-white shadow-sm">
-                                        <img
-                                            src={item.thumbnail_url}
-                                            alt={item.name}
-                                            className="h-full w-full object-cover"
-                                        />
-                                    </div>
-                                    <div className="flex flex-1 flex-col justify-center">
-                                        <h3 className="text-xs font-bold line-clamp-1">{item.name}</h3>
-                                        <p className="text-[10px] text-muted-foreground">
-                                            Qty: {item.quantity} • {item.selectedSize}
-                                        </p>
-                                    </div>
-                                    <p className="text-xs font-bold flex items-center">
-                                        {formatPrice(item.price * item.quantity)}
+                            <div className="space-y-2 pt-4 border-t border-dashed">
+                                <div className="flex justify-between text-[11px] font-medium text-muted-foreground">
+                                    <span>Bag Total</span>
+                                    <span>{formatPrice(total)}</span>
+                                </div>
+                                <div className="flex justify-between text-[11px] font-medium">
+                                    <span className="text-muted-foreground">Shipping Fee</span>
+                                    <span className={delivery === 0 ? "text-green-600 font-bold" : ""}>
+                                        {delivery === 0 ? "FREE" : formatPrice(delivery)}
+                                    </span>
+                                </div>
+                                {delivery > 0 && (
+                                    <p className="text-[9px] text-primary font-bold bg-primary/5 p-1.5 rounded-lg text-center animate-pulse mt-1">
+                                        Add {formatPrice(3000 - total)} more for FREE Delivery
                                     </p>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="space-y-2 pt-4 border-t border-dashed">
-                            <div className="flex justify-between text-xs text-muted-foreground font-medium">
-                                <span>Subtotal</span>
-                                <span>{formatPrice(total)}</span>
-                            </div>
-                            <div className="flex justify-between text-xs text-muted-foreground font-medium">
-                                <span>Delivery</span>
-                                <span className={delivery === 0 ? "text-green-600 font-bold" : ""}>
-                                    {delivery === 0 ? "FREE" : formatPrice(delivery)}
-                                </span>
-                            </div>
-                            <div className="mt-3 flex justify-between text-lg font-bold pt-3 border-t border-gray-100">
-                                <span className="font-serif">Grand Total</span>
-                                <span className="text-primary">{formatPrice(finalTotal)}</span>
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Payment Section (Now below summary) */}
-                    <div className="rounded-2xl border border-white/40 bg-white shadow-lg p-6">
-                        <h2 className="font-serif text-lg font-bold mb-4">Payment Method</h2>
-                        <div className="space-y-3">
-                            <label
-                                className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border-2 p-4 transition-all hover:bg-muted/30 ${paymentMethod === "upi" ? "border-primary bg-primary/5" : "border-gray-100"
-                                    }`}
+                    {/* Payment Mode */}
+                    <div className="rounded-2xl border border-white/40 bg-white shadow-sm overflow-hidden mb-8">
+                        <div className="p-4 border-b bg-secondary/10 flex items-center gap-2">
+                            <Truck className="h-4 w-4 text-primary" />
+                            <h2 className="text-sm font-bold uppercase tracking-wider">Payment Method</h2>
+                        </div>
+                        <div className="p-4 grid grid-cols-2 gap-3">
+                            <button
+                                type="button"
                                 onClick={() => setPaymentMethod("upi")}
+                                className={cn(
+                                    "p-3 rounded-xl border-2 transition-all text-center space-y-1",
+                                    paymentMethod === "upi" ? "border-primary bg-primary/5" : "border-gray-50"
+                                )}
                             >
-                                <div className="flex items-center gap-3">
-                                    <input
-                                        type="radio"
-                                        name="payment"
-                                        className="h-4 w-4 accent-primary"
-                                        checked={paymentMethod === "upi"}
-                                        onChange={() => setPaymentMethod("upi")}
-                                    />
-                                    <div>
-                                        <p className="font-bold text-sm">UPI / Cards / Netbanking</p>
-                                        <p className="text-[11px] text-muted-foreground">Secure payment via Razorpay</p>
-                                    </div>
-                                </div>
-                            </label>
-                            <label
-                                className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl border-2 p-4 transition-all hover:bg-muted/30 ${paymentMethod === "cod" ? "border-primary bg-primary/5" : "border-gray-100"
-                                    }`}
+                                <p className="text-xs font-bold">Online</p>
+                                <p className="text-[8px] text-muted-foreground uppercase font-black">Fast & Secure</p>
+                            </button>
+                            <button
+                                type="button"
                                 onClick={() => setPaymentMethod("cod")}
+                                className={cn(
+                                    "p-3 rounded-xl border-2 transition-all text-center space-y-1",
+                                    paymentMethod === "cod" ? "border-primary bg-primary/5" : "border-gray-50"
+                                )}
                             >
-                                <div className="flex items-center gap-3">
-                                    <input
-                                        type="radio"
-                                        name="payment"
-                                        className="h-4 w-4 accent-primary"
-                                        checked={paymentMethod === "cod"}
-                                        onChange={() => setPaymentMethod("cod")}
-                                    />
-                                    <div>
-                                        <p className="font-bold text-sm">Cash on Delivery</p>
-                                        <p className="text-[11px] text-muted-foreground">Pay when you receive your order</p>
-                                    </div>
-                                </div>
-                            </label>
+                                <p className="text-xs font-bold">COD</p>
+                                <p className="text-[8px] text-muted-foreground uppercase font-black">Pay on Delivery</p>
+                            </button>
                         </div>
                     </div>
+                </form>
 
+                {/* Desktop view button (hidden on mobile sticky) */}
+                <div className="hidden md:block">
                     <Button
-                        type="submit"
+                        onClick={handlePlaceOrder}
                         size="lg"
-                        className="w-full py-6 rounded-xl text-lg font-bold shadow-lg hover:shadow-xl transition-all"
+                        className="w-full py-6 rounded-xl text-lg font-bold shadow-lg"
                         loading={isPlacingOrder}
                     >
                         Place Order — {formatPrice(finalTotal)}
                     </Button>
-                </form>
+                </div>
 
-                <p className="text-[9px] text-center text-muted-foreground mt-6 uppercase tracking-widest opacity-60">
-                    SSL Secure Payment • 100% Genuine Products
+                <p className="text-[9px] text-center text-muted-foreground mt-6 uppercase tracking-widest opacity-60 px-4">
+                    SSL Encrypted Security • Authentic Products • Easy Returns
                 </p>
-            </div >
-        </div >
+            </div>
+
+            {/* Mobile Sticky Bottom Bar */}
+            <div className="fixed bottom-0 left-0 right-0 z-[60] md:hidden">
+                <div className="bg-white border-t border-primary/10 px-4 py-3 pb-safe flex items-center justify-between shadow-[0_-8px_30px_rgb(0,0,0,0.08)] backdrop-blur-md bg-white/95">
+                    <div>
+                        <div className="flex items-center gap-1.5" onClick={() => {
+                            const summary = document.querySelector('.bg-secondary\\/10 h2:contains("Summary")');
+                            summary?.scrollIntoView({ behavior: 'smooth' });
+                        }}>
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">To Pay</span>
+                            <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
+                            <span className="text-xs font-bold text-primary">View Brief</span>
+                        </div>
+                        <p className="text-lg font-black tracking-tight text-foreground">{formatPrice(finalTotal)}</p>
+                    </div>
+                    <Button
+                        onClick={handlePlaceOrder}
+                        disabled={isPlacingOrder || (pincodeStatus !== "serviceable" && !serviceablePincode) || !formData.full_name}
+                        className="h-12 px-8 rounded-xl font-bold uppercase tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-95"
+                    >
+                        {isPlacingOrder ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                        ) : (
+                            <>
+                                {paymentMethod === "cod" ? "Confirm Booking" : "Pay Now"}
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                            </>
+                        )}
+                    </Button>
+                </div>
+            </div>
+
+            {/* QR Code Sheet */}
+            <Sheet open={isQRSheetOpen} onOpenChange={setIsQRSheetOpen}>
+                <SheetContent side="bottom" className="rounded-t-[2rem] p-6 h-[70vh]">
+                    <SheetHeader className="text-center">
+                        <SheetTitle className="text-xl font-serif">Scan & Pay</SheetTitle>
+                        <SheetDescription>
+                            Scan the QR code with any UPI app to complete your payment
+                        </SheetDescription>
+                    </SheetHeader>
+
+                    <div className="flex flex-col items-center justify-center py-8">
+                        <div className="relative p-6 bg-white rounded-3xl shadow-xl border-2 border-primary/10 mb-6">
+                            <QrCode className="h-48 w-48 text-primary" />
+                            <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+                                <ShoppingBag className="h-24 w-24" />
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 w-full max-w-xs text-center">
+                            <div>
+                                <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest mb-1">Amount to pay</p>
+                                <p className="text-3xl font-black text-primary">{formatPrice(finalTotal)}</p>
+                            </div>
+
+                            <div className="bg-secondary/10 p-4 rounded-2xl">
+                                <p className="text-xs font-medium text-muted-foreground">Once payment is complete, the order will be confirmed automatically.</p>
+                            </div>
+
+                            <Button
+                                onClick={() => {
+                                    setIsQRSheetOpen(false);
+                                    handlePlaceOrder({ preventDefault: () => { } } as any);
+                                }}
+                                className="w-full h-12 rounded-xl font-bold uppercase tracking-widest"
+                                loading={isPlacingOrder}
+                            >
+                                I Have Paid
+                            </Button>
+                        </div>
+                    </div>
+                </SheetContent>
+            </Sheet>
+        </div>
     );
 }
+
+const Badge = ({ children, variant, className }: any) => (
+    <span className={cn(
+        "px-2 py-0.5 rounded-full inline-flex items-center justify-center font-bold tracking-tight",
+        variant === 'secondary' ? "bg-secondary text-secondary-foreground" : "bg-primary text-primary-foreground",
+        className
+    )}>
+        {children}
+    </span>
+);

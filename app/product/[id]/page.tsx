@@ -54,33 +54,48 @@ export default async function ProductPage({ params }: ProductPageProps) {
         : false;
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="grid gap-8 md:grid-cols-2 lg:gap-16">
-                <ProductGallery images={typedProduct.images} thumbnail={typedProduct.thumbnail_url} />
-                <ProductInfo product={typedProduct} isWishlisted={isWishlisted} />
-            </div>
+        <div className="bg-background min-h-screen">
+            <div className="container mx-auto px-0 md:px-4 md:py-8">
+                <div className="grid gap-0 md:gap-12 lg:gap-20 md:grid-cols-2">
+                    <div className="w-full">
+                        <ProductGallery images={typedProduct.images} thumbnail={typedProduct.thumbnail_url} />
+                    </div>
 
-            {/* Description Section */}
-            {typedProduct.description && (
-                <div className="mt-16 border-t pt-10">
-                    <h2 className="font-serif text-2xl font-bold mb-4">Product Description</h2>
-                    <div className="prose max-w-none text-muted-foreground whitespace-pre-line">
-                        {typedProduct.description}
+                    <div className="px-5 pt-4 md:px-0 md:pt-0">
+                        <ProductInfo product={typedProduct} isWishlisted={isWishlisted} />
                     </div>
                 </div>
-            )}
 
-            {/* Reviews Section */}
-            <div className="mt-16 border-t pt-10">
-                <h2 className="font-serif text-2xl font-bold mb-8">Customer Reviews</h2>
-                <ReviewList productId={typedProduct.id} />
+                {/* Description Section */}
+                {typedProduct.description && (
+                    <div className="mt-12 border-t border-secondary/20 pt-12 px-5 md:px-0">
+                        <div className="flex items-center gap-3 mb-6">
+                            <h2 className="font-serif text-xl font-black uppercase tracking-tight">Style Notes</h2>
+                            <div className="h-px flex-1 bg-secondary/10" />
+                        </div>
+                        <div className="prose prose-sm max-w-none text-muted-foreground/80 leading-relaxed font-medium whitespace-pre-line">
+                            {typedProduct.description}
+                        </div>
+                    </div>
+                )}
+
+                {/* Reviews Section */}
+                <div className="mt-16 border-t border-secondary/20 pt-16 px-5 md:px-0">
+                    <div className="flex items-center gap-3 mb-10">
+                        <h2 className="font-serif text-xl font-black uppercase tracking-tight">The Verdict</h2>
+                        <div className="h-px flex-1 bg-secondary/10" />
+                    </div>
+                    <ReviewList productId={typedProduct.id} />
+                </div>
+
+                {/* Related Products Section */}
+                <div className="mt-20 border-t border-secondary/20 pt-20 pb-20 md:pb-0 px-5 md:px-0">
+                    <RelatedProducts
+                        categoryId={typedProduct.category_id}
+                        currentProductId={typedProduct.id}
+                    />
+                </div>
             </div>
-
-            {/* Related Products Section */}
-            <RelatedProducts
-                categoryId={typedProduct.category_id}
-                currentProductId={typedProduct.id}
-            />
         </div>
     );
 }

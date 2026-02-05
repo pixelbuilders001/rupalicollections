@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 
 interface ProductGalleryProps {
     images?: string[];
@@ -13,67 +13,109 @@ interface ProductGalleryProps {
 export function ProductGallery({ images = [], thumbnail }: ProductGalleryProps) {
     const displayImages = images.length > 0 ? images : (thumbnail ? [thumbnail] : []);
     const [selectedImage, setSelectedImage] = useState(0);
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    const handleScroll = () => {
+        if (scrollRef.current) {
+            const index = Math.round(scrollRef.current.scrollLeft / scrollRef.current.clientWidth);
+            setSelectedImage(index);
+        }
+    };
+
+    const scrollToImage = (index: number) => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTo({
+                left: index * scrollRef.current.clientWidth,
+                behavior: "smooth"
+            });
+            setSelectedImage(index);
+        }
+    };
 
     if (displayImages.length === 0) {
-        return <div className="aspect-[3/4] w-full rounded-lg bg-muted flex items-center justify-center text-muted-foreground">No Image Available</div>;
+        return (
+            <div className="aspect-[3/4] w-full rounded-2xl bg-secondary/5 flex items-center justify-center text-muted-foreground border border-dashed">
+                No Image Available
+            </div>
+        );
     }
 
     return (
-        <div className="relative flex flex-col gap-3">
-            {/* Main Image - Snap Carousel on Mobile */}
-            <div className="relative aspect-[3/4] w-full overflow-x-auto snap-x snap-mandatory scrollbar-hide flex gap-0 rounded-lg bg-muted">
-                {displayImages.map((img, index) => (
-                    <div key={index} className="relative h-full w-full flex-shrink-0 snap-center">
-                        <Image
-                            src={img}
-                            alt={`Product Image ${index + 1}`}
-                            fill
-                            className="object-cover"
-                            priority={index === 0}
+        <div className="relative group -mx-4 md:mx-0 flex flex-col gap-4">
+            {/* Main Image Container */}
+            <div className="relative aspect-[3/4] w-full overflow-hidden md:rounded-2xl bg-secondary/5">
+                <div
+                    ref={scrollRef}
+                    onScroll={handleScroll}
+                    className="flex h-full w-full overflow-x-auto snap-x snap-mandatory no-scrollbar cursor-zoom-in"
+                >
+                    {displayImages.map((img, index) => (
+                        <div key={index} className="relative h-full w-full flex-shrink-0 snap-center">
+                            <Image
+                                src={img}
+                                alt={`Product View ${index + 1}`}
+                                fill
+                                className="object-cover"
+                                priority={index === 0}
+                                sizes="(max-width: 768px) 100vw, 50vw"
+                            />
+                        </div>
+                    ))}
+                </div>
+
+                {/* Overlay Tags */}
+                <div className="absolute top-4 left-4 flex flex-col gap-2">
+                    <span className="bg-white/90 backdrop-blur px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-widest text-primary shadow-sm">New Season</span>
+                </div>
+
+                {/* Mobile Pagination Pills */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full">
+                    {displayImages.map((_, index) => (
+                        <div
+                            key={index}
+                            className={cn(
+                                "h-1 w-1 rounded-full transition-all duration-300",
+                                selectedImage === index ? "bg-white w-4" : "bg-white/40"
+                            )}
                         />
-                    </div>
-                ))}
+                    ))}
+                </div>
+
+                {/* Desktop Arrows */}
+                <button
+                    onClick={() => scrollToImage(Math.max(0, selectedImage - 1))}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur opacity-0 group-hover:opacity-100 transition-all hover:bg-white text-foreground hidden md:flex shadow-lg"
+                >
+                    <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button
+                    onClick={() => scrollToImage(Math.min(displayImages.length - 1, selectedImage + 1))}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur opacity-0 group-hover:opacity-100 transition-all hover:bg-white text-foreground hidden md:flex shadow-lg"
+                >
+                    <ChevronRight className="h-6 w-6" />
+                </button>
             </div>
 
-            {/* Pagination Dots - Mobile Overlay Style */}
-            <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-black/10 px-2 py-1 backdrop-blur-sm">
-                {displayImages.map((_, index) => (
-                    <div
-                        key={index}
-                        className={cn(
-                            "h-1.5 w-1.5 rounded-full transition-all duration-300",
-                            selectedImage === index ? "bg-white w-3" : "bg-white/50"
-                        )}
-                        // Note: For actual swipe detection, would need a library or more complex hook.
-                        // Here we just keep the dots for UI reference or simple click.
-                        onClick={() => {
-                            const el = document.querySelector('.snap-x');
-                            if (el) {
-                                el.scrollTo({ left: index * el.clientWidth, behavior: 'smooth' });
-                                setSelectedImage(index);
-                            }
-                        }}
-                    />
-                ))}
-            </div>
-
-            {/* Thumbnails - Hidden on mobile, visible on desktop */}
+            {/* Thumbnails */}
             {displayImages.length > 1 && (
-                <div className="hidden md:flex gap-4 overflow-x-auto pb-2">
+                <div className="flex gap-3 px-4 md:px-0 overflow-x-auto no-scrollbar py-2">
                     {displayImages.map((img, index) => (
                         <button
                             key={index}
-                            onClick={() => setSelectedImage(index)}
+                            onClick={() => scrollToImage(index)}
                             className={cn(
-                                "relative aspect-square w-20 flex-shrink-0 overflow-hidden rounded-md border-2 transition-all",
-                                selectedImage === index ? "border-primary" : "border-transparent"
+                                "relative aspect-[3/4] w-16 md:w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all active:scale-95",
+                                selectedImage === index
+                                    ? "border-primary shadow-lg ring-2 ring-primary/10"
+                                    : "border-transparent opacity-60 hover:opacity-100 scale-95"
                             )}
                         >
                             <Image
                                 src={img}
-                                alt={`Product thumbnail ${index + 1}`}
+                                alt={`Thumbnail ${index + 1}`}
                                 fill
                                 className="object-cover"
+                                sizes="80px"
                             />
                         </button>
                     ))}
