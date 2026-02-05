@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getOrdersAction } from "@/app/actions/order-actions";
 import { createReturnRequestAction } from "@/app/actions/return-actions";
 import { Order, OrderItem } from "@/lib/types";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, compressImage } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/common/BackButton";
 import { Package, ArrowLeft, Upload, Check, AlertCircle } from "lucide-react";
@@ -71,13 +71,23 @@ export default function ReturnOrderPage({ params }: { params: Promise<{ orderId:
         fetchOrder();
     }, [orderId, router]);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const files = Array.from(e.target.files);
-            setImages(prev => [...prev, ...files]);
 
-            const newPreviews = files.map(file => URL.createObjectURL(file));
-            setPreviewUrls(prev => [...prev, ...newPreviews]);
+            toast.promise(
+                Promise.all(files.map(file => compressImage(file))),
+                {
+                    loading: 'Compressing images...',
+                    success: (compressedFiles) => {
+                        setImages(prev => [...prev, ...compressedFiles]);
+                        const newPreviews = compressedFiles.map(file => URL.createObjectURL(file));
+                        setPreviewUrls(prev => [...prev, ...newPreviews]);
+                        return 'Images ready';
+                    },
+                    error: 'Failed to compress images'
+                }
+            );
         }
     };
 
