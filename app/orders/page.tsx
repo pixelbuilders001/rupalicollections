@@ -28,6 +28,7 @@ export default function OrdersPage() {
     const [userReviews, setUserReviews] = useState<Record<string, ProductReview>>({});
     const [loading, setLoading] = useState(true);
     const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
+    const [trackingItemId, setTrackingItemId] = useState<string | null>(null);
     const [isTrackerOpen, setIsTrackerOpen] = useState(false);
 
     const fetchOrders = async () => {
@@ -56,10 +57,10 @@ export default function OrdersPage() {
         fetchOrders();
     }, []);
 
-    const handleCancelOrder = async (orderCode: string) => {
-        if (!confirm("Are you sure you want to cancel this order?")) return;
+    const handleCancelOrder = async (orderId: string, orderItemId?: string) => {
+        if (!confirm(`Are you sure you want to cancel this ${orderItemId ? 'item' : 'order'}?`)) return;
 
-        const result = await cancelOrderAction(orderCode);
+        const result = await cancelOrderAction(orderId, orderItemId);
         if (result.success) {
             fetchOrders();
         } else {
@@ -117,14 +118,6 @@ export default function OrdersPage() {
                                         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-70">Order ID</p>
                                         <p className="font-mono text-[11px] font-bold text-foreground">#{order.order_code || order.id.slice(0, 8).toUpperCase()}</p>
                                     </div>
-                                    <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-tight ${statusConfig[order.status in statusConfig ? order.status : 'pending'].bg} ${statusConfig[order.status in statusConfig ? order.status : 'pending'].color}`}>
-                                        {(() => {
-                                            const status = order.status in statusConfig ? order.status : 'pending';
-                                            const Config = statusConfig[status];
-                                            return <Config.icon className="h-3 w-3" />;
-                                        })()}
-                                        {statusConfig[order.status in statusConfig ? order.status : 'pending'].label}
-                                    </div>
                                 </div>
                             </div>
 
@@ -147,33 +140,105 @@ export default function OrdersPage() {
                                             )}
                                         </div>
                                         <div className="flex flex-1 flex-col justify-center gap-0.5">
-                                            <h3 className="text-xs font-bold leading-tight line-clamp-1">{item.product?.name}</h3>
-                                            <p className="text-[10px] font-medium text-muted-foreground">
-                                                Qty: {item.qty} • {formatPrice(item.price)}
-                                            </p>
-                                        </div>
-                                        <div className="flex flex-col items-end gap-2">
-                                            <div className="text-xs font-bold text-foreground">
-                                                {formatPrice(item.price * item.qty)}
+                                            <div className="flex items-center justify-between mb-0.5">
+                                                <h3 className="text-xs font-bold leading-tight line-clamp-1">{item.product?.name}</h3>
+                                                {(() => {
+                                                    const itemStatus = item.status || order.status;
+                                                    const status = itemStatus in statusConfig ? itemStatus : 'pending';
+                                                    const Config = statusConfig[status];
+                                                    return (
+                                                        <div className={`flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-tight ${Config.bg} ${Config.color}`}>
+                                                            <Config.icon className="h-2 w-2" />
+                                                            {Config.label}
+                                                        </div>
+                                                    );
+                                                })()}
                                             </div>
-                                            {order.status === 'delivered' && (
-                                                <ReviewDialog
-                                                    productId={item.product_id}
-                                                    orderId={order.id}
-                                                    orderItemId={item.id}
-                                                    mode={userReviews[item.id] ? 'edit' : 'create'}
-                                                    initialData={userReviews[item.id] ? {
-                                                        rating: userReviews[item.id].rating,
-                                                        title: userReviews[item.id].title || '',
-                                                        review: userReviews[item.id].review || ''
-                                                    } : undefined}
-                                                    onSuccess={fetchOrders}
-                                                >
-                                                    <Button variant="outline" size="sm" className="h-7 text-[10px]">
-                                                        {userReviews[item.id] ? 'Edit Review' : 'Write Review'}
-                                                    </Button>
-                                                </ReviewDialog>
-                                            )}
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-[10px] font-medium text-muted-foreground">
+                                                    Qty: {item.qty} • {formatPrice(item.price)}
+                                                </p>
+                                                <div className="text-xs font-bold text-foreground">
+                                                    {formatPrice(item.price * item.qty)}
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-2 flex flex-wrap gap-2">
+                                                {/* Local status for logic (item status takes precedence) */}
+                                                {(() => {
+                                                    const itemStatus = item.status || order.status;
+                                                    const isCancelled = itemStatus === 'cancelled';
+                                                    if (isCancelled) return null;
+
+                                                    const isDelivered = itemStatus === 'delivered';
+                                                    const canCancel = itemStatus?.toLowerCase() === 'created' || itemStatus?.toLowerCase() === 'pending';
+
+                                                    return (
+                                                        <>
+                                                            {/* Write Review - Delivered only */}
+                                                            {isDelivered && (
+                                                                <ReviewDialog
+                                                                    productId={item.product_id}
+                                                                    orderId={order.id}
+                                                                    orderItemId={item.id}
+                                                                    mode={userReviews[item.id] ? 'edit' : 'create'}
+                                                                    initialData={userReviews[item.id] ? {
+                                                                        rating: userReviews[item.id].rating,
+                                                                        title: userReviews[item.id].title || '',
+                                                                        review: userReviews[item.id].review || ''
+                                                                    } : undefined}
+                                                                    onSuccess={fetchOrders}
+                                                                >
+                                                                    <Button variant="outline" size="sm" className="h-7 rounded-lg border-primary/20 bg-primary/5 px-3 text-[9px] font-bold uppercase tracking-wider text-primary hover:bg-primary hover:text-white">
+                                                                        {userReviews[item.id] ? 'Edit Review' : 'Write Review'}
+                                                                    </Button>
+                                                                </ReviewDialog>
+                                                            )}
+
+                                                            {/* Return Item - Delivered only */}
+                                                            {isDelivered && (
+                                                                <Link href={`/return/${order.id}?itemId=${item.id}`} className="flex-1 min-w-[80px]">
+                                                                    <Button variant="outline" size="sm" className="h-7 w-full rounded-lg border-orange-200 bg-orange-50 px-3 text-[9px] font-bold uppercase tracking-wider text-orange-600 hover:bg-orange-600 hover:text-white">
+                                                                        Return item
+                                                                    </Button>
+                                                                </Link>
+                                                            )}
+
+                                                            {/* Track Item - Show always unless it's just created (no history) or if we want to allow tracking cancelled items too */}
+                                                            {itemStatus !== 'created' && (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-7 flex-1 rounded-lg border-primary/20 bg-primary/5 px-3 text-[9px] font-bold uppercase tracking-wider text-primary hover:bg-primary hover:text-white"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setTrackingOrder(order);
+                                                                        setTrackingItemId(item.id);
+                                                                        setIsTrackerOpen(true);
+                                                                    }}
+                                                                >
+                                                                    Track item
+                                                                </Button>
+                                                            )}
+
+                                                            {/* Cancel Item - Created/Pending only */}
+                                                            {canCancel && (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-7 flex-1 rounded-lg border-red-100 bg-red-50 px-3 text-[9px] font-bold uppercase tracking-wider text-red-600 hover:bg-red-600 hover:text-white"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleCancelOrder(order.id, item.id);
+                                                                    }}
+                                                                >
+                                                                    Cancel
+                                                                </Button>
+                                                            )}
+                                                        </>
+                                                    );
+                                                })()}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -181,7 +246,7 @@ export default function OrdersPage() {
 
                             {/* Order Footer - App Summary Style */}
                             <div className="bg-gray-50/20 p-4">
-                                <div className="mb-4 flex items-center justify-between border-t border-gray-100 pt-3">
+                                <div className="flex items-center justify-between border-t border-gray-100 pt-3">
                                     <div className="flex items-center gap-1.5 text-muted-foreground">
                                         <Calendar className="h-3 w-3" />
                                         <span className="text-[10px] font-medium">
@@ -197,34 +262,6 @@ export default function OrdersPage() {
                                         <span className="text-sm font-black text-primary">{formatPrice(order.amount)}</span>
                                     </div>
                                 </div>
-
-                                <div className="flex gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-9 flex-1 rounded-xl border-primary/20 bg-primary/5 text-[11px] font-bold uppercase tracking-wider text-primary hover:bg-primary hover:text-white"
-                                        onClick={() => {
-                                            if (order.status === 'delivered') {
-                                                window.location.href = `/return/${order.id}`;
-                                            } else {
-                                                setTrackingOrder(order);
-                                                setIsTrackerOpen(true);
-                                            }
-                                        }}
-                                    >
-                                        {order.status === 'delivered' ? 'Return Item' : 'Track Order'}
-                                    </Button>
-                                    {order.status?.toLowerCase() === 'created' && (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-9 flex-1 rounded-xl border-red-100 bg-red-50 text-[11px] font-bold uppercase tracking-wider text-red-600 hover:bg-red-600 hover:text-white"
-                                            onClick={() => handleCancelOrder(order.id)}
-                                        >
-                                            Cancel
-                                        </Button>
-                                    )}
-                                </div>
                             </div>
                         </motion.div>
                     ))}
@@ -232,6 +269,7 @@ export default function OrdersPage() {
 
                 <OrderTracker
                     order={trackingOrder}
+                    orderItemId={trackingItemId}
                     open={isTrackerOpen}
                     onOpenChange={setIsTrackerOpen}
                 />

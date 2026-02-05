@@ -74,7 +74,7 @@ export async function getOrdersAction() {
     }
 }
 
-export async function cancelOrderAction(orderCode: string) {
+export async function cancelOrderAction(orderId: string, orderItemId?: string) {
     try {
         const supabase = await createClient();
         const { data: { session } } = await supabase.auth.getSession();
@@ -91,9 +91,10 @@ export async function cancelOrderAction(orderCode: string) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                order_id: orderCode,
+                order_id: orderId,
+                order_item_id: orderItemId,
                 status: 'cancelled',
-                note: 'Cancelled by the customer'
+                note: orderItemId ? 'Item cancelled by the customer' : 'Cancelled by the customer'
             })
         });
 

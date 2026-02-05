@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface OrderTrackerProps {
     order: Order | null;
+    orderItemId?: string | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }
@@ -46,12 +47,16 @@ const cancelledStep = {
     icon: XCircle,
 };
 
-export function OrderTracker({ order, open, onOpenChange }: OrderTrackerProps) {
+export function OrderTracker({ order, orderItemId, open, onOpenChange }: OrderTrackerProps) {
     if (!order) return null;
 
     const currentStatus = order.status || "pending";
-    const history = order.history || [];
+    const history = (order.history || []).filter(item =>
+        !orderItemId || !item.order_item_id || item.order_item_id === orderItemId
+    );
     const hasHistory = history.length > 0;
+
+    const trackingItem = orderItemId ? order.items?.find(i => i.id === orderItemId) : null;
 
     const getStatusIcon = (status: string) => {
         switch (status.toLowerCase()) {
@@ -68,7 +73,9 @@ export function OrderTracker({ order, open, onOpenChange }: OrderTrackerProps) {
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle className="font-serif text-2xl">Track Order</DialogTitle>
+                    <DialogTitle className="font-serif text-2xl">
+                        {trackingItem ? `Track ${trackingItem.product?.name}` : 'Track Order'}
+                    </DialogTitle>
                     <p className="text-sm text-muted-foreground">
                         Order #{order.order_code || order.id.slice(0, 8).toUpperCase()}
                     </p>

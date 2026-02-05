@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { useStore } from "@/lib/store";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getOrdersAction } from "@/app/actions/order-actions";
 import { createReturnRequestAction } from "@/app/actions/return-actions";
 import { Order, OrderItem } from "@/lib/types";
@@ -35,6 +35,8 @@ import { Input } from "@/components/ui/input";
 
 export default function ReturnOrderPage({ params }: { params: Promise<{ orderId: string }> }) {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const itemId = searchParams.get("itemId");
     // Unwrap params using React.use()
     const { orderId } = use(params);
 
@@ -144,7 +146,11 @@ export default function ReturnOrderPage({ params }: { params: Promise<{ orderId:
                 </div>
 
                 <div className="space-y-4">
-                    {order.items?.map((item) => (
+                    {order.items?.filter(item => {
+                        const isNotCancelled = item.status !== 'cancelled';
+                        const matchesItemId = !itemId || item.id === itemId;
+                        return isNotCancelled && matchesItemId;
+                    }).map((item) => (
                         <div key={item.id} className="overflow-hidden rounded-xl border bg-white p-4 shadow-sm">
                             <div className="flex gap-4">
                                 <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border bg-muted">

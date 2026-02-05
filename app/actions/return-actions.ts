@@ -125,9 +125,9 @@ export async function createReturnRequestAction(formData: FormData) {
         // Also update the main orders table if needed to reflect the status there?
         // Usually yes.
         const { error: orderUpdateError } = await supabase
-            .from('orders')
+            .from('order_items')
             .update({ status: 'return_initiated' }) // Assuming 'return_initiated' is a valid status for order
-            .eq('id', orderId);
+            .eq('id', orderItemId);
 
         if (historyError || orderUpdateError) {
             console.error("History/Order update error:", historyError, orderUpdateError);

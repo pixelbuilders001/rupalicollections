@@ -78,6 +78,7 @@ export interface Order {
 export interface OrderHistoryItem {
     id: string;
     order_id: string;
+    order_item_id?: string; // Links to a specific item if applicable
     status: string;
     note?: string;
     created_at: string;
@@ -89,6 +90,7 @@ export interface OrderItem {
     product_id: string;
     qty: number;
     price: number;
+    status?: 'created' | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'return_initiated';
     created_at: string;
     product?: Product;
     selectedSize?: string;
