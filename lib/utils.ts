@@ -19,12 +19,13 @@ export function calculateDiscount(price: number, originalPrice: number) {
 
 export const getURL = () => {
     let url =
-        process?.env?.NEXT_PUBLIC_SITE_URL ?? // Set this to your storefront/admin URL in env
-        process?.env?.NEXT_PUBLIC_VERCEL_URL ?? // Automatically set by Vercel.
-        'http://localhost:3000/'
+        process?.env?.NEXT_PUBLIC_SITE_URL ?? // Use custom env if set
+        process?.env?.NEXT_PUBLIC_VERCEL_URL ?? // Auto-detected on Vercel
+        (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+
     // Make sure to include `https://` when not localhost.
-    url = url.includes('http') ? url : `https://${url}`
-    // Make sure to include a trailing `/`.
-    url = url.charAt(url.length - 1) === '/' ? url : `${url}/`
-    return url
+    url = url.includes('http') ? url : `https://${url}`;
+
+    // Ensure trailing slash
+    return url.endsWith('/') ? url : `${url}/`;
 }
