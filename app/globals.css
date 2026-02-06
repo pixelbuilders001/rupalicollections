@@ -32,6 +32,9 @@
   --input: #EADDD7;
   --ring: #C5A059;
 
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1A;
+
   /* Radius */
   --radius: 0.5rem;
 }
@@ -52,6 +55,8 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
 
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: calc(var(--radius) - 2px);

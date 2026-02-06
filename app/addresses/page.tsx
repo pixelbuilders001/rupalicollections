@@ -154,7 +154,7 @@ export default function AddressesPage() {
 
     return (
         <div className="min-h-screen bg-secondary/20 pb-20 pt-8 md:pb-8">
-            <div className="container mx-auto max-w-4xl px-4">
+            <div className="container mx-auto max-w-6xl px-4">
                 {/* Header */}
                 <div className="mb-8 flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -181,7 +181,7 @@ export default function AddressesPage() {
                         <Button onClick={() => handleOpenModal()} className="mt-6">Add My First Address</Button>
                     </div>
                 ) : (
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <AnimatePresence mode="popLayout">
                             {addresses.map((address) => (
                                 <motion.div

@@ -251,7 +251,7 @@ export function ProductInfo({ product, isWishlisted = false }: ProductInfoProps)
     };
 
     return (
-        <div className="flex flex-col gap-5 md:gap-8 pb-32 md:pb-0">
+        <div className="flex flex-col gap-5 md:gap-6 md:sticky md:top-24 md:pb-10 pb-32">
             {/* Header Section */}
             <div>
                 <div className="flex items-center justify-between">
@@ -264,7 +264,7 @@ export function ProductInfo({ product, isWishlisted = false }: ProductInfoProps)
                     </button>
                 </div>
 
-                <h1 className="mt-2 font-serif text-2xl font-black leading-tight text-foreground md:text-5xl">{product.name}</h1>
+                <h1 className="mt-2 font-serif text-2xl font-black leading-tight text-foreground md:text-4xl">{product.name}</h1>
 
                 <div className="mt-4 flex items-center gap-4">
                     <div className="flex flex-col">
@@ -323,7 +323,7 @@ export function ProductInfo({ product, isWishlisted = false }: ProductInfoProps)
             )}
 
             {/* Delivery Availability */}
-            <div className="rounded-3xl bg-secondary/5 border border-white/40 p-5 space-y-4">
+            <div className="rounded-3xl bg-secondary/5 border border-white/40 p-4 space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                         <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center shadow-sm">
@@ -409,25 +409,15 @@ export function ProductInfo({ product, isWishlisted = false }: ProductInfoProps)
             </div>
 
             {/* Final Sticky Checkout Bar - Improved for Mobile */}
-            <div className="fixed bottom-0 left-0 right-0 z-[60] md:static md:z-0">
+            <div className="fixed bottom-0 left-0 right-0 z-[60] md:static md:z-0 md:mt-4">
                 <div className="bg-white/95 backdrop-blur-xl border-t border-primary/10 p-4 pb-safe md:bg-transparent md:border-0 md:p-0 md:backdrop-blur-none transition-all shadow-[0_-12px_40px_-10px_rgba(0,0,0,0.1)] md:shadow-none">
-                    <div className="container mx-auto max-w-7xl flex items-center gap-3">
-                        <Button
-                            variant="secondary"
-                            size="icon"
-                            className={cn(
-                                "h-14 w-14 shrink-0 rounded-2xl transition-all active:scale-95 border-2 shadow-sm",
-                                isLiked ? "border-red-100 bg-red-50 text-red-500" : "border-secondary bg-white"
-                            )}
-                            onClick={handleWishlist}
-                        >
-                            <Heart className={cn("h-6 w-6 transition-transform duration-300", isLiked && "fill-current scale-110")} />
-                        </Button>
+                    <div className="container mx-auto max-w-7xl flex items-center gap-3 md:flex-row-reverse md:gap-4 md:px-0">
+                        {/* Desktop: Share button moves here or stays up? Stays up. Wishlist button here. */}
 
-                        <div className="flex flex-1 gap-2.5">
+                        <div className="flex flex-1 gap-2.5 md:flex-col md:gap-4">
                             <Button
                                 className={cn(
-                                    "h-14 flex-1 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all active:scale-[0.98] shadow-lg shadow-primary/20",
+                                    "h-14 flex-1 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all active:scale-[0.98] shadow-lg shadow-primary/20 md:h-12 md:text-sm md:w-full",
                                     isAdding && "opacity-80"
                                 )}
                                 onClick={handleAddToCart}
@@ -437,25 +427,34 @@ export function ProductInfo({ product, isWishlisted = false }: ProductInfoProps)
                                 {product.stock === 0 ? "Out of Stock" : "Add to Bag"}
                             </Button>
 
-                            <AnimatePresence>
-                                {cartCount > 0 && (
-                                    <motion.div
-                                        initial={{ opacity: 0, x: 20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        className="flex-1"
-                                    >
-                                        <Button
-                                            variant="secondary"
-                                            className="h-14 w-full rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] border-2 border-primary/20 bg-white hover:bg-primary/5 shadow-sm active:scale-[0.98]"
-                                            onClick={handleBuyNow}
-                                            disabled={isAdding}
-                                        >
-                                            View Bag ({cartCount})
-                                        </Button>
-                                    </motion.div>
+                            {/* Wishlist Button - Desktop integrated here if needed, or keep separate. 
+                                On mobile it's a separate icon button. 
+                                On desktop, let's make it a secondary button full width.
+                            */}
+                            <Button
+                                variant="outline"
+                                className={cn(
+                                    "hidden md:flex h-12 w-full rounded-2xl text-sm font-bold uppercase tracking-wider border-2 hover:bg-secondary/20",
+                                    isLiked && "border-red-200 text-red-500 bg-red-50"
                                 )}
-                            </AnimatePresence>
+                                onClick={handleWishlist}
+                            >
+                                {isLiked ? "Wishlisted" : "Add to Wishlist"} <Heart className={cn("ml-2 h-4 w-4", isLiked && "fill-current")} />
+                            </Button>
                         </div>
+
+                        {/* Mobile Wishlist Button */}
+                        <Button
+                            variant="secondary"
+                            size="icon"
+                            className={cn(
+                                "h-14 w-14 shrink-0 rounded-2xl transition-all active:scale-95 border-2 shadow-sm md:hidden",
+                                isLiked ? "border-red-100 bg-red-50 text-red-500" : "border-secondary bg-white"
+                            )}
+                            onClick={handleWishlist}
+                        >
+                            <Heart className={cn("h-6 w-6 transition-transform duration-300", isLiked && "fill-current scale-110")} />
+                        </Button>
                     </div>
                 </div>
             </div>

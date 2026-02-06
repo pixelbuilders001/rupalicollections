@@ -40,69 +40,13 @@ export function FilterSheet({
             <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 md:hidden"
+                className="gap-2 lg:hidden"
                 onClick={() => setIsOpen(true)}
             >
                 <Filter className="h-4 w-4" /> Filters
             </Button>
 
-            {/* Desktop Sidebar (visible on md+) */}
-            <div className="hidden h-fit w-64 flex-col gap-6 rounded-lg border p-6 md:flex">
-                <div>
-                    <h3 className="mb-4 font-serif text-lg font-semibold">Categories</h3>
-                    <div className="flex flex-col gap-2">
-                        <button
-                            onClick={() => setSelectedCategory(null)}
-                            className={cn(
-                                "text-left text-sm transition-colors hover:text-primary",
-                                !selectedCategory ? "font-semibold text-primary" : "text-muted-foreground"
-                            )}
-                        >
-                            All Products
-                        </button>
-                        {categoriesList.map((cat) => (
-                            <button
-                                key={cat.id}
-                                onClick={() => setSelectedCategory(cat.slug)}
-                                className={cn(
-                                    "text-left text-sm transition-colors hover:text-primary",
-                                    selectedCategory === cat.slug ? "font-semibold text-primary" : "text-muted-foreground"
-                                )}
-                            >
-                                {cat.name}
-                            </button>
-                        ))}
-                    </div>
-                </div>
 
-                <div>
-                    <h3 className="mb-4 font-serif text-lg font-semibold">Price Range</h3>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>₹{priceRange[0]}</span>
-                        <span>-</span>
-                        <span>₹{priceRange[1]}</span>
-                    </div>
-                    {/* Simple slider implementation would go here, for now static visual or simple buttons */}
-                    <div className="mt-2 flex gap-2">
-                        <Button
-                            variant={priceRange[1] === 5000 ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setPriceRange([0, 5000])}
-                            className="h-7 text-xs"
-                        >
-                            Under ₹5k
-                        </Button>
-                        <Button
-                            variant={priceRange[1] > 5000 ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setPriceRange([0, 100000])}
-                            className="h-7 text-xs"
-                        >
-                            All
-                        </Button>
-                    </div>
-                </div>
-            </div>
 
             {/* Mobile Drawer */}
             <AnimatePresence>
@@ -113,14 +57,14 @@ export function FilterSheet({
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setIsOpen(false)}
-                            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm md:hidden"
+                            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm lg:hidden"
                         />
                         <motion.div
                             initial={{ x: "100%" }}
                             animate={{ x: 0 }}
                             exit={{ x: "100%" }}
                             transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                            className="fixed inset-y-0 right-0 z-50 flex h-full w-3/4 flex-col bg-background p-6 shadow-xl md:hidden"
+                            className="fixed inset-y-0 right-0 z-50 flex h-full w-3/4 flex-col bg-background p-6 shadow-xl lg:hidden"
                         >
                             <div className="mb-6 flex items-center justify-between">
                                 <h2 className="font-serif text-xl font-bold">Filters</h2>

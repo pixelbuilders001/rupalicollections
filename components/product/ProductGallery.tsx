@@ -44,11 +44,11 @@ export function ProductGallery({ images = [], thumbnail, productName = "Product"
     return (
         <div className="relative group flex flex-col gap-4 px-4 md:px-0">
             {/* Main Image Container */}
-            <div className="relative aspect-[4/5] md:aspect-[3/4] max-h-[60vh] md:max-h-none w-full overflow-hidden rounded-2xl md:rounded-2xl bg-secondary/5">
+            <div className="relative aspect-[4/5] md:aspect-auto md:h-auto w-full overflow-hidden rounded-2xl md:rounded-none bg-secondary/5 md:bg-transparent">
                 <div
                     ref={scrollRef}
                     onScroll={handleScroll}
-                    className="flex h-full w-full overflow-x-auto snap-x snap-mandatory no-scrollbar cursor-zoom-in"
+                    className="flex h-full w-full overflow-x-auto snap-x snap-mandatory no-scrollbar cursor-zoom-in md:hidden"
                 >
                     {displayImages.map((img, index) => (
                         <div key={index} className="relative h-full w-full flex-shrink-0 snap-center">
@@ -64,13 +64,57 @@ export function ProductGallery({ images = [], thumbnail, productName = "Product"
                     ))}
                 </div>
 
+                {/* Desktop Layout: Main Image + Thumbnails Below */}
+                <div className="hidden md:flex md:flex-col gap-4 w-full max-w-[500px] mx-auto sticky top-24">
+                    {/* Main Image */}
+                    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-secondary/5 shadow-sm border border-secondary/10">
+                        <Image
+                            src={displayImages[selectedImage]}
+                            alt={`${productName} - View ${selectedImage + 1}`}
+                            fill
+                            className="object-cover"
+                            priority
+                            sizes="(max-width: 1200px) 40vw, 30vw"
+                        />
+                        <div className="absolute top-4 left-4">
+                            <span className="bg-white/95 backdrop-blur px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-primary shadow-sm border border-primary/5">
+                                New Season
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Horizontal Thumbnails for Desktop */}
+                    <div className="flex gap-3 overflow-x-auto no-scrollbar py-1">
+                        {displayImages.map((img, index) => (
+                            <button
+                                key={index}
+                                onClick={() => setSelectedImage(index)}
+                                className={cn(
+                                    "relative aspect-[3/4] w-20 shrink-0 overflow-hidden rounded-xl border-2 transition-all hover:scale-105 active:scale-95",
+                                    selectedImage === index
+                                        ? "border-primary shadow-md ring-2 ring-primary/10"
+                                        : "border-transparent opacity-60 hover:opacity-100 hover:border-secondary"
+                                )}
+                            >
+                                <Image
+                                    src={img}
+                                    alt={`Thumbnail ${index + 1}`}
+                                    fill
+                                    className="object-cover"
+                                    sizes="80px"
+                                />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
                 {/* Overlay Tags */}
-                <div className="absolute top-4 left-4 flex flex-col gap-2">
+                <div className="absolute top-4 left-4 flex flex-col gap-2 md:hidden">
                     <span className="bg-white/90 backdrop-blur px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-widest text-primary shadow-sm">New Season</span>
                 </div>
 
                 {/* Mobile Pagination Pills */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full">
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full md:hidden">
                     {displayImages.map((_, index) => (
                         <div
                             key={index}
@@ -82,24 +126,16 @@ export function ProductGallery({ images = [], thumbnail, productName = "Product"
                     ))}
                 </div>
 
-                {/* Desktop Arrows */}
-                <button
-                    onClick={() => scrollToImage(Math.max(0, selectedImage - 1))}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur opacity-0 group-hover:opacity-100 transition-all hover:bg-white text-foreground hidden md:flex shadow-lg"
-                >
-                    <ChevronLeft className="h-6 w-6" />
-                </button>
-                <button
-                    onClick={() => scrollToImage(Math.min(displayImages.length - 1, selectedImage + 1))}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur opacity-0 group-hover:opacity-100 transition-all hover:bg-white text-foreground hidden md:flex shadow-lg"
-                >
-                    <ChevronRight className="h-6 w-6" />
-                </button>
+                {/* Desktop Arrows (Hidden as we switched to grid) */}
+                {/* 
+                <button ... />
+                <button ... />
+             */}
             </div>
 
-            {/* Thumbnails */}
+            {/* Thumbnails (Mobile Only) */}
             {displayImages.length > 1 && (
-                <div className="flex gap-2 px-4 md:px-0 overflow-x-auto no-scrollbar py-2">
+                <div className="flex gap-2 px-4 md:px-0 overflow-x-auto no-scrollbar py-2 md:hidden">
                     {displayImages.map((img, index) => (
                         <button
                             key={index}

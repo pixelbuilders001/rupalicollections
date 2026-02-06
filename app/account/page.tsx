@@ -14,7 +14,11 @@ import {
     ChevronRight,
     CreditCard,
     Bell,
-    Pencil
+    Pencil,
+    ShieldCheck,
+    Truck,
+    Clock,
+    UserCircle
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
@@ -32,6 +36,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 interface UserProfile {
     id: string;
@@ -88,6 +93,7 @@ export default function AccountPage() {
         try {
             await createClient().auth.signOut();
             useStore.getState().clearCart();
+            useStore.getState().setIsLoggedIn(false);
             router.refresh();
             router.push("/login");
         } finally {
@@ -101,13 +107,10 @@ export default function AccountPage() {
         try {
             let avatar_url = user.avatar_url;
 
-            // Handle Photo Upload if selected
             if (selectedFile) {
                 const uploadFormData = new FormData();
                 uploadFormData.append('file', selectedFile);
-
                 const uploadResult = await uploadProfilePhoto(uploadFormData);
-
                 if (uploadResult.success && uploadResult.data) {
                     avatar_url = uploadResult.data;
                 } else {
@@ -135,50 +138,52 @@ export default function AccountPage() {
                 setPreviewUrl(avatar_url || null);
                 setSelectedFile(null);
                 setIsEditOpen(false);
-
-                // Update global store for instant reflect in BottomNav
                 useStore.getState().setUserProfile(updatedProfileData as { name: string; avatar_url: string | null });
-
                 toast.success("Profile updated successfully!");
                 router.refresh();
             } else {
-                console.error("Error updating profile:", result.error);
                 toast.error("Failed to update profile. Please try again.");
             }
         } catch (error) {
-            console.error("Profile update error:", error);
             toast.error("An unexpected error occurred.");
         } finally {
             setSaving(false);
         }
     };
 
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { y: 20, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: { type: "spring" as const, stiffness: 300, damping: 24 }
-        }
-    };
-
     const menuItems = [
-        { icon: Package, label: "Orders", desc: "Check your order status", href: "/orders", color: "text-blue-600", bg: "bg-blue-50" },
-        { icon: Heart, label: "Wishlist", desc: "Your favorite items", href: "/wishlist", color: "text-pink-600", bg: "bg-pink-50" },
-        { icon: MapPin, label: "Addresses", desc: "Manage delivery addresses", href: "/addresses", color: "text-green-600", bg: "bg-green-50" },
-        // { icon: CreditCard, label: "Payments", desc: "Manage payment methods", href: "/payments", color: "text-purple-600", bg: "bg-purple-50" },
-        // { icon: Bell, label: "Notifications", desc: "Offers and updates", href: "/notifications", color: "text-amber-600", bg: "bg-amber-50" },
-        // { icon: Settings, label: "Settings", desc: "Profile and security", href: "/settings", color: "text-slate-600", bg: "bg-slate-50" },
+        {
+            icon: Package,
+            label: "My Orders",
+            desc: "Track, return or buy items again",
+            href: "/orders",
+            color: "text-blue-600",
+            bg: "bg-blue-50"
+        },
+        {
+            icon: Heart,
+            label: "Wishlist",
+            desc: "View your saved favorites",
+            href: "/wishlist",
+            color: "text-pink-600",
+            bg: "bg-pink-50"
+        },
+        {
+            icon: MapPin,
+            label: "Saved Addresses",
+            desc: "Manage your delivery locations",
+            href: "/addresses",
+            color: "text-green-600",
+            bg: "bg-green-50"
+        },
+        // {
+        //     icon: Settings,
+        //     label: "Account Settings",
+        //     desc: "Privacy, security and more",
+        //     href: "#",
+        //     color: "text-slate-600",
+        //     bg: "bg-slate-50"
+        // },
     ];
 
     if (loading) {
@@ -193,156 +198,178 @@ export default function AccountPage() {
     }
 
     return (
-        <div className="min-h-screen bg-secondary/20 pb-20 pt-4 md:pb-8">
-            {/* Decorative Background Blob */}
-            <div className="fixed -left-40 -top-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
-            <div className="fixed -bottom-40 -right-40 h-96 w-96 rounded-full bg-pink-500/5 blur-3xl" />
+        <div className="min-h-screen bg-secondary/5 pb-20 pt-4 md:pb-12 md:pt-10">
+            <div className="container mx-auto max-w-6xl px-4">
+                {/* Header for Desktop */}
+                <div className="hidden md:block mb-10">
+                    <h1 className="font-serif text-4xl font-black text-foreground uppercase tracking-tight">Your Account</h1>
+                    <p className="text-muted-foreground mt-2 font-medium">Manage your profile, orders, and addresses from one place.</p>
+                </div>
 
-            <div className="container relative mx-auto max-w-5xl px-4">
-                {/* <BackButton className="mb-4" showLabel label="Back" /> */}
-
-                {/* Header Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-4 flex items-center justify-between"
-                >
-                    <div>
-                        <h1 className="font-serif text-2xl font-bold text-foreground md:text-4xl">My Account</h1>
-                    </div>
-                </motion.div>
-
-                <div className="grid gap-6 lg:grid-cols-12">
-                    {/* Left Column: Redesigned Profile Card */}
+                <div className="grid gap-8 lg:grid-cols-12">
+                    {/* Left Column: Profile Card (Sidebar on Desktop) */}
                     <div className="lg:col-span-4">
                         <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="sticky top-24 overflow-hidden rounded-[2rem] border border-white/40 bg-white/40 shadow-2xl backdrop-blur-2xl"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="overflow-hidden rounded-[2.5rem] border border-white/60 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
                         >
-                            <div className="relative p-8 flex flex-col items-center">
-                                {/* Edit Button - Top Right */}
-                                <div className="absolute top-4 right-4">
-                                    <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-10 w-10 rounded-xl bg-primary/5 text-primary hover:bg-primary/10 transition-all active:scale-95"
-                                        onClick={() => setIsEditOpen(true)}
-                                    >
-                                        <Pencil className="h-4.5 w-4.5" />
-                                    </Button>
-                                </div>
-
-                                {/* Centered Photo */}
-                                <div className="relative mb-6 h-24 w-24 overflow-hidden rounded-3xl border-4 border-white bg-white shadow-xl">
-                                    {previewUrl ? (
-                                        <Image
-                                            src={previewUrl}
-                                            alt={user?.name || "User"}
-                                            fill
-                                            className="object-cover"
-                                        />
-                                    ) : (
-                                        <div className="flex h-full w-full items-center justify-center bg-primary/5 text-primary">
-                                            <User className="h-10 w-10" />
+                            <div className="p-8">
+                                <div className="flex flex-col items-center">
+                                    <div className="relative mb-6">
+                                        <div className="h-28 w-28 overflow-hidden rounded-3xl border-4 border-secondary/20 bg-white shadow-lg ring-4 ring-white">
+                                            {previewUrl ? (
+                                                <Image
+                                                    src={previewUrl}
+                                                    alt={user?.name || "User"}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center bg-primary/5 text-primary">
+                                                    <User className="h-12 w-12 opacity-30" />
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-
-
-
-                                {/* Info List */}
-                                <div className="w-full space-y-4 pt-6 border-t border-black/5">
-                                    <div className="flex items-center gap-4 group">
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary/30 text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary transition-colors">
-                                            <User className="h-5 w-5" />
-                                        </div>
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/60 leading-none mb-1.5">Full Name</span>
-                                            <span className="text-sm font-semibold text-gray-700 truncate">{user?.name}</span>
-                                        </div>
+                                        <button
+                                            onClick={() => setIsEditOpen(true)}
+                                            className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-white shadow-lg hover:scale-110 transition-transform"
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </button>
                                     </div>
+                                    <h2 className="text-xl font-black text-foreground uppercase tracking-tight">{user?.name}</h2>
+                                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">{user?.email}</p>
+                                </div>
 
-                                    <div className="flex items-center gap-4 group">
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary/30 text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary transition-colors">
+                                <div className="mt-10 space-y-5">
+                                    <div className="flex items-center gap-4 group cursor-default">
+                                        <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-secondary/10 text-primary group-hover:scale-110 transition-transform">
                                             <Bell className="h-5 w-5" />
                                         </div>
-                                        <div className="flex flex-col min-w-0">
-                                            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/60 leading-none mb-1.5">Email Address</span>
-                                            <span className="text-sm font-semibold text-gray-700 truncate">{user?.email}</span>
+                                        <div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block leading-none mb-1">Email Address</span>
+                                            <span className="text-sm font-bold text-foreground line-clamp-1">{user?.email}</span>
                                         </div>
                                     </div>
 
                                     {user?.phone && (
-                                        <div className="flex items-center gap-4 group">
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary/30 text-muted-foreground group-hover:bg-primary/5 group-hover:text-primary transition-colors">
+                                        <div className="flex items-center gap-4 group cursor-default">
+                                            <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-secondary/10 text-primary group-hover:scale-110 transition-transform">
                                                 <CreditCard className="h-5 w-5" />
                                             </div>
-                                            <div className="flex flex-col min-w-0">
-                                                <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground/60 leading-none mb-1.5">Phone Number</span>
-                                                <span className="text-sm font-semibold text-gray-700">{user.phone}</span>
+                                            <div>
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block leading-none mb-1">Phone Number</span>
+                                                <span className="text-sm font-bold text-foreground">{user.phone}</span>
                                             </div>
                                         </div>
                                     )}
+
+                                    <div className="flex items-center gap-4 group cursor-default">
+                                        <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-secondary/10 text-primary group-hover:scale-110 transition-transform">
+                                            <ShieldCheck className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block leading-none mb-1">Member Since</span>
+                                            <span className="text-sm font-bold text-foreground">Feb 2026</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-10 pt-8 border-t border-secondary/10 hidden md:block">
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleLogout}
+                                        className="w-full h-12 rounded-xl border-red-100 text-red-500 hover:bg-red-50 hover:text-red-600 font-bold uppercase tracking-widest text-[10px] transition-all"
+                                        loading={isLoggingOut}
+                                    >
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        Sign Out Account
+                                    </Button>
                                 </div>
                             </div>
                         </motion.div>
                     </div>
 
-                    {/* Right Column: Dashboard Grid */}
+                    {/* Right Column: Dashboard (Grid on Desktop, List on Mobile) */}
                     <div className="lg:col-span-8">
-                        <motion.div
-                            variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
-                            className="grid gap-4 sm:grid-cols-2"
-                        >
-                            {menuItems.map((item) => (
-                                <motion.div key={item.label} variants={itemVariants}>
+                        <div className="grid gap-4 md:gap-6 sm:grid-cols-2">
+                            {menuItems.map((item, idx) => (
+                                <motion.div
+                                    key={item.label}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                >
                                     <Link
                                         href={item.href}
-                                        className="group relative flex h-full items-center gap-4 overflow-hidden rounded-2xl border border-white/50 bg-white/40 p-5 shadow-sm backdrop-blur-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:border-primary/20"
+                                        className="group relative flex h-full items-center gap-5 overflow-hidden rounded-[2.5rem] border border-white/60 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.03)] transition-all hover:shadow-[0_20px_40px_rgb(0,0,0,0.06)] hover:-translate-y-1"
                                     >
-                                        <div className={`rounded-xl p-3 shadow-sm ${item.bg} ${item.color} transition-transform group-hover:scale-110 duration-300`}>
-                                            <item.icon className="h-6 w-6" />
+                                        <div className={cn(
+                                            "flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.5rem] shadow-sm transition-transform group-hover:scale-110 duration-500",
+                                            item.bg,
+                                            item.color
+                                        )}>
+                                            <item.icon className="h-7 w-7" />
                                         </div>
                                         <div className="flex-1">
-                                            <h3 className="font-bold text-gray-800 group-hover:text-primary transition-colors">{item.label}</h3>
-                                            <p className="text-xs text-muted-foreground/80">{item.desc}</p>
+                                            <h3 className="text-lg font-black uppercase tracking-tight text-foreground group-hover:text-primary transition-colors">{item.label}</h3>
+                                            <p className="text-xs font-medium text-muted-foreground/80 mt-1">{item.desc}</p>
                                         </div>
-                                        <ChevronRight className="h-5 w-5 text-muted-foreground/30 transition-all group-hover:translate-x-1 group-hover:text-primary" />
+                                        <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-secondary/5 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                                            <ChevronRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
+                                        </div>
                                     </Link>
                                 </motion.div>
                             ))}
-                        </motion.div>
+                        </div>
+
+                        {/* Additional Dashboard Info for Desktop */}
+                        <div className="mt-8 hidden lg:grid grid-cols-3 gap-6">
+                            <div className="p-6 rounded-[2rem] bg-secondary/10 border border-white/40 flex flex-col items-center text-center">
+                                <Truck className="h-8 w-8 text-primary mb-3" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Free Shipping</span>
+                                <span className="text-xs font-bold mt-1">On All Orders</span>
+                            </div>
+                            <div className="p-6 rounded-[2rem] bg-secondary/10 border border-white/40 flex flex-col items-center text-center">
+                                <Clock className="h-8 w-8 text-primary mb-3" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Fast Delivery</span>
+                                <span className="text-xs font-bold mt-1">2-4 Business Days</span>
+                            </div>
+                            <div className="p-6 rounded-[2rem] bg-secondary/10 border border-white/40 flex flex-col items-center text-center">
+                                <ShieldCheck className="h-8 w-8 text-primary mb-3" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Secure Payment</span>
+                                <span className="text-xs font-bold mt-1">Safe Checkout</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div className="mt-8 flex justify-center pb-8">
-                <Button
-                    variant="outline"
-                    onClick={handleLogout}
-                    className="w-full max-w-sm rounded-2xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 h-12 font-bold uppercase tracking-widest text-[11px]"
-                    loading={isLoggingOut}
-                >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                </Button>
+                {/* Mobile Logout Button */}
+                <div className="mt-12 flex justify-center md:hidden">
+                    <Button
+                        variant="outline"
+                        onClick={handleLogout}
+                        className="w-full h-14 rounded-2xl border-red-50 text-red-500 hover:bg-red-50 hover:text-red-600 font-black uppercase tracking-[0.2em] text-[11px]"
+                        loading={isLoggingOut}
+                    >
+                        <LogOut className="mr-3 h-5 w-5" />
+                        Sign Out
+                    </Button>
+                </div>
             </div>
 
             {/* Edit Profile Modal */}
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-                <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle>Edit Profile</DialogTitle>
-                        {/* <DialogDescription>
-                            Make changes to your profile here. Click save when you're done.
-                        </DialogDescription> */}
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="flex flex-col items-center justify-center gap-4 mb-4">
-                            <div className="relative h-20 w-20 overflow-hidden rounded-full border bg-muted">
+                <DialogContent className="sm:max-w-[425px] rounded-[2.5rem] border-none shadow-2xl overflow-hidden p-0 max-h-[90vh] flex flex-col">
+                    <div className="bg-secondary/10 px-8 py-6 border-b border-secondary/10 shrink-0">
+                        <DialogTitle className="text-xl font-black uppercase tracking-tight">Edit Profile</DialogTitle>
+                        <DialogDescription className="text-xs font-bold text-muted-foreground mt-1 uppercase tracking-widest">Update your personal information</DialogDescription>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 scrollbar-hide">
+                        <div className="flex flex-col items-center justify-center gap-3">
+                            <div className="relative h-16 w-16 md:h-20 md:w-20 overflow-hidden rounded-3xl border-2 border-white bg-secondary/5 shadow-lg">
                                 {previewUrl ? (
                                     <Image
                                         src={previewUrl}
@@ -351,16 +378,16 @@ export default function AccountPage() {
                                         className="object-cover"
                                     />
                                 ) : (
-                                    <User className="h-10 w-10 m-auto text-muted-foreground" />
+                                    <User className="h-8 w-8 m-auto text-muted-foreground" />
                                 )}
                             </div>
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-xs h-8"
+                                className="h-7 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest"
                                 onClick={() => document.getElementById('modal-avatar-input')?.click()}
                             >
-                                <Pencil className="h-3 w-3 mr-2" /> Change Photo
+                                <Pencil className="h-3 w-3 mr-1" /> Change Photo
                             </Button>
                             <input
                                 id="modal-avatar-input"
@@ -370,48 +397,47 @@ export default function AccountPage() {
                                 onChange={handleFileChange}
                             />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <label htmlFor="email" className="text-right text-sm font-medium">
-                                Email
-                            </label>
-                            <Input
-                                id="email"
 
-                                value={formData.email}
-                                disabled
-                                className="col-span-3 bg-muted "
-                            />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <label htmlFor="name" className="text-right text-sm font-medium">
-                                Name
-                            </label>
-                            <Input
-                                id="name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="col-span-3"
-                            />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <label htmlFor="phone" className="text-right text-sm font-medium">
-                                Phone
-                            </label>
-                            <Input
-                                id="phone"
-                                type="tel"
-                                value={formData.phone}
-                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                className="col-span-3"
-                                placeholder="+91 00000 00000"
-                            />
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-2">Full Name</label>
+                                <Input
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    className="h-12 rounded-xl border-secondary/20 focus:border-primary/50 transition-colors"
+                                    placeholder="Enter your name"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-2">Phone Number</label>
+                                <Input
+                                    type="tel"
+                                    value={formData.phone}
+                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                    className="h-12 rounded-xl border-secondary/20 focus:border-primary/50 transition-colors"
+                                    placeholder="+91 00000 00000"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-2">Email Address</label>
+                                <Input
+                                    value={formData.email}
+                                    disabled
+                                    className="h-12 rounded-xl bg-secondary/5 border-none opacity-60"
+                                />
+                            </div>
                         </div>
                     </div>
-                    <DialogFooter>
-                        <Button type="submit" onClick={handleSaveChanges} loading={saving}>
-                            Save changes
+
+                    <div className="px-8 pb-8 pt-4 border-t border-secondary/5 shrink-0">
+                        <Button
+                            className="w-full h-12 rounded-xl font-black uppercase tracking-widest text-[11px] shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
+                            onClick={handleSaveChanges}
+                            loading={saving}
+                        >
+                            Save Changes
                         </Button>
-                    </DialogFooter>
+                    </div>
                 </DialogContent>
             </Dialog>
         </div>

@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { FilterSheet } from "@/components/shop/FilterSheet";
+import { FilterSidebar } from "@/components/shop/FilterSidebar";
 import { ProductCard } from "@/components/ProductCard";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -139,15 +140,25 @@ export function ShopClient() {
                 </div>
             </div>
 
-            <div className="flex gap-8">
-                <div className="w-full">
+            <div className="flex flex-col lg:flex-row gap-8">
+                {/* Desktop Sidebar */}
+                <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-24 h-[calc(100vh-8rem)] overflow-y-auto no-scrollbar">
+                    <FilterSidebar
+                        selectedCategory={selectedCategory}
+                        setSelectedCategory={setSelectedCategory}
+                        priceRange={priceRange}
+                        setPriceRange={setPriceRange}
+                    />
+                </aside>
+
+                <div className="flex-1">
                     {filteredProducts.length === 0 ? (
                         <div className="flex h-64 flex-col items-center justify-center text-muted-foreground">
                             <p className="text-sm">No products found</p>
                             <Button variant="link" className="text-xs" onClick={() => { setSelectedCategory(null); setPriceRange([0, 100000]); }}>Clear Filters</Button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 lg:gap-6">
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 gap-y-6 lg:gap-6">
                             {filteredProducts.map((product) => (
                                 <ProductCard
                                     key={product.id}
@@ -160,5 +171,6 @@ export function ShopClient() {
                 </div>
             </div>
         </div>
+
     );
 }

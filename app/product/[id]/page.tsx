@@ -103,7 +103,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <div className="container mx-auto px-0 md:px-4 md:py-8">
-                <div className="grid gap-0 md:gap-12 lg:gap-20 md:grid-cols-2">
+                <div className="grid gap-0 md:gap-8 lg:gap-16 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] bg-background relative">
                     <div className="w-full">
                         <ProductGallery
                             images={typedProduct.images}
@@ -112,7 +112,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
                         />
                     </div>
 
-                    <div className="px-5 pt-4 md:px-0 md:pt-0">
+                    <div className="px-5 pt-4 md:px-0 md:pt-4 relative">
                         <ProductInfo product={typedProduct} isWishlisted={isWishlisted} />
                     </div>
                 </div>

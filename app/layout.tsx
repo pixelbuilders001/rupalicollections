@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
+import { DesktopNavbar } from "@/components/layout/DesktopNavbar";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { Footer } from "@/components/layout/Footer";
 import { Toaster } from "sonner";
 import { LoadingProvider } from "@/components/providers/LoadingProvider";
 import { ScrollToTop } from "@/components/common/ScrollToTop";
@@ -112,10 +114,14 @@ export default function RootLayout({
         <Toaster position="top-center" richColors />
         <LoadingProvider>
           <ScrollToTop />
-          <Navbar />
-          <main className="min-h-screen pb-16 md:pb-0">
+          <div className="lg:hidden">
+            <Navbar />
+          </div>
+          <DesktopNavbar />
+          <main className="min-h-screen pb-16 lg:pb-0">
             {children}
           </main>
+          <Footer />
           <BottomNav />
         </LoadingProvider>
       </body>
