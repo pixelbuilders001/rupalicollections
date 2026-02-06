@@ -15,6 +15,7 @@ interface CartState {
     setCartItems: (items: CartItem[]) => void;
     cartTotal: () => number;
     cartCount: () => number;
+    wishlistCount: () => number;
     serviceablePincode: string | null;
     serviceableCity: string | null;
     serviceableState: string | null;
@@ -102,6 +103,9 @@ export const useStore = create<CartState>()(
             },
             cartCount: () => {
                 return get().items.reduce((count, item) => count + item.quantity, 0);
+            },
+            wishlistCount: () => {
+                return get().wishlist.length;
             },
             serviceablePincode: null,
             serviceableCity: null,

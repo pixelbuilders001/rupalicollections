@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Grid, ShoppingBag, User } from "lucide-react";
+import { Home, Grid, ShoppingBag, User, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useStore } from "@/lib/store";
@@ -59,6 +59,7 @@ export function BottomNav() {
     const navItems = [
         { href: "/", label: "Home", icon: Home },
         { href: "/shop", label: "Shop", icon: Grid },
+        { href: "/wishlist", label: "Wishlist", icon: Heart, count: useStore((state) => state.wishlistCount()) },
         { href: "/cart", label: "Cart", icon: ShoppingBag, count: cartCount },
         { href: "/account", label: "Profile", icon: User, avatar: userProfile?.avatar_url },
     ];

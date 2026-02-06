@@ -13,6 +13,8 @@ import { getCategories, getTrendingProducts, getNewArrivals, getHeroBanners } fr
 import { useStore } from "@/lib/store";
 import { PWAInstallBanner } from "@/components/common/PWAInstallBanner";
 import { HeroCarousel } from "./HeroCarousel";
+import { ProductGridSkeleton } from "@/components/product/ProductSkeleton";
+import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 
 export function HomeClient() {
     const [categories, setCategories] = useState<any[]>(fallbackCategories);
@@ -161,7 +163,7 @@ export function HomeClient() {
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 lg:gap-6">
                     {productsLoading ? (
-                        [1, 2, 3, 4].map(i => <div key={i} className="aspect-[3/4] animate-pulse rounded-md bg-secondary/30" />)
+                        <ProductGridSkeleton count={6} />
                     ) : trendingProducts.map((product) => (
                         <ProductCard key={product.id} product={product} />
                     ))}
@@ -195,7 +197,7 @@ export function HomeClient() {
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:gap-6">
                     {productsLoading ? (
-                        [1, 2, 3, 4].map(i => <div key={i} className="aspect-[3/4] animate-pulse rounded-md bg-secondary/30" />)
+                        <ProductGridSkeleton count={4} />
                     ) : newArrivals.map((product) => (
                         <ProductCard key={product.id} product={product} />
                     ))}
@@ -203,6 +205,8 @@ export function HomeClient() {
             </section>
 
 
+            {/* Recently Viewed */}
+            < RecentlyViewed />
 
             <div className="px-4 lg:hidden">
                 <PWAInstallBanner />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { FilterSheet } from "@/components/shop/FilterSheet";
 import { FilterSidebar } from "@/components/shop/FilterSidebar";
@@ -17,6 +17,7 @@ import { SortOption, Product } from "@/lib/types";
 import { getCategories, getProducts } from "@/app/actions/product-actions";
 import { getWishlistIdsAction } from "@/app/actions/wishlist-actions";
 import { FullPageLoader } from "@/components/ui/FullPageLoader";
+import { ProductSkeleton } from "@/components/product/ProductSkeleton";
 
 export function ShopClient() {
     const searchParams = useSearchParams();
@@ -29,6 +30,13 @@ export function ShopClient() {
     const [productsList, setProductsList] = useState<Product[]>([]);
     const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
+
+    const [offset, setOffset] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
+    const [totalFound, setTotalFound] = useState(0);
+    const LIMIT = 8;
+    const offsetRef = useRef(0);
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -47,23 +55,67 @@ export function ShopClient() {
         fetchWishlistIds();
     }, []);
 
-    useEffect(() => {
-        const fetchProductsByFilter = async () => {
-            setLoading(true);
-            try {
-                const result = await getProducts({ categorySlug: selectedCategory });
-                if (result.success && result.data) {
-                    setProductsList(result.data);
-                }
-            } catch (err) {
-                console.error("Error fetching products:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const fetchItems = useCallback(async (isInitial = false) => {
+        if (!isInitial && (!hasMore || isFetchingMore || loading)) return;
 
-        fetchProductsByFilter();
-    }, [selectedCategory]);
+        if (isInitial) {
+            setLoading(true);
+            offsetRef.current = 0;
+        } else {
+            setIsFetchingMore(true);
+        }
+
+        try {
+            const currentOffset = isInitial ? 0 : offsetRef.current;
+            const result = await getProducts({
+                categorySlug: selectedCategory,
+                limit: LIMIT,
+                offset: currentOffset,
+                sortBy: sortBy,
+                minPrice: priceRange[0],
+                maxPrice: priceRange[1]
+            });
+
+            if (result.success && result.data) {
+                if (isInitial) {
+                    setProductsList(result.data);
+                    offsetRef.current = result.data.length;
+                } else {
+                    setProductsList(prev => [...prev, ...result.data]);
+                    offsetRef.current += result.data.length;
+                }
+                setHasMore(result.data.length === LIMIT);
+                if (result.totalCount !== undefined) {
+                    setTotalFound(result.totalCount);
+                }
+            }
+        } catch (err) {
+            console.error("Error fetching products:", err);
+        } finally {
+            setLoading(false);
+            setIsFetchingMore(false);
+        }
+    }, [selectedCategory, sortBy, priceRange, hasMore, isFetchingMore, loading]);
+
+    // Initial fetch and reset on filter change
+    useEffect(() => {
+        fetchItems(true);
+    }, [selectedCategory, sortBy, priceRange]);
+
+    // Intersection Observer for infinite scroll
+    const observer = useRef<IntersectionObserver | null>(null);
+    const lastProductRef = useCallback((node: HTMLDivElement) => {
+        if (loading || isFetchingMore) return;
+        if (observer.current) observer.current.disconnect();
+
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                fetchItems();
+            }
+        });
+
+        if (node) observer.current.observe(node);
+    }, [loading, isFetchingMore, hasMore, fetchItems]);
 
     const activeCategoryName = useMemo(() => {
         if (!selectedCategory) return "All Collection";
@@ -100,9 +152,7 @@ export function ShopClient() {
         return result;
     }, [productsList, priceRange, sortBy]);
 
-    if (loading) {
-        return <FullPageLoader />;
-    }
+    // We'll handle loading state inline now for better UX
 
     return (
         <div className="container mx-auto px-4 py-4 md:py-8">
@@ -112,7 +162,7 @@ export function ShopClient() {
                         <h1 className="font-serif text-xl font-bold md:text-3xl">
                             {activeCategoryName}
                         </h1>
-                        <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">{filteredProducts.length} Products Found</p>
+                        <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">{totalFound} Products Found</p>
                     </div>
 
                     <div className="flex items-center gap-1.5 pt-2">
@@ -152,21 +202,45 @@ export function ShopClient() {
                 </aside>
 
                 <div className="flex-1">
-                    {filteredProducts.length === 0 ? (
-                        <div className="flex h-64 flex-col items-center justify-center text-muted-foreground">
-                            <p className="text-sm">No products found</p>
-                            <Button variant="link" className="text-xs" onClick={() => { setSelectedCategory(null); setPriceRange([0, 100000]); }}>Clear Filters</Button>
-                        </div>
-                    ) : (
+                    {loading ? (
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 gap-y-6 lg:gap-6">
-                            {filteredProducts.map((product) => (
-                                <ProductCard
-                                    key={product.id}
-                                    product={product}
-                                    isWishlisted={wishlistIds.has(product.id)}
-                                />
+                            {Array.from({ length: 8 }).map((_, i) => (
+                                <ProductSkeleton key={i} />
                             ))}
                         </div>
+                    ) : productsList.length === 0 ? (
+                        <div className="flex h-64 flex-col items-center justify-center text-muted-foreground">
+                            <p className="text-sm">No products found</p>
+                            <Button variant="link" className="text-xs" onClick={() => { setSelectedCategory(null); setPriceRange([0, 100000]); setSortBy("popularity"); }}>Clear Filters</Button>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 gap-y-6 lg:gap-6">
+                                {productsList.map((product, index) => (
+                                    <div key={product.id} ref={index === productsList.length - 1 ? lastProductRef : null}>
+                                        <ProductCard
+                                            product={product}
+                                            isWishlisted={wishlistIds.has(product.id)}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Loading state for more items */}
+                            {isFetchingMore && (
+                                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 gap-y-6 lg:gap-6 mt-6">
+                                    {Array.from({ length: 4 }).map((_, i) => (
+                                        <ProductSkeleton key={`more-${i}`} />
+                                    ))}
+                                </div>
+                            )}
+
+                            {!hasMore && productsList.length > 0 && (
+                                <div className="mt-12 text-center">
+                                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground/40">You've seen it all</p>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             </div>

@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server";
-import { Product, HeroBanner } from "@/lib/types";
+import { Product, HeroBanner, SortOption } from "@/lib/types";
 
 export async function getCategories() {
     const supabase = await createClient();
@@ -92,18 +92,37 @@ export async function getRelatedProducts(categoryId: string, currentProductId: s
     return { success: true, data: data as Product[] };
 }
 
-export async function getProducts(options: { categorySlug?: string | null } = {}) {
+export async function getProducts(options: {
+    categorySlug?: string | null,
+    limit?: number,
+    offset?: number,
+    sortBy?: SortOption,
+    minPrice?: number,
+    maxPrice?: number
+} = {}) {
+    const {
+        categorySlug,
+        limit = 12,
+        offset = 0,
+        sortBy = "newest",
+        minPrice = 0,
+        maxPrice = 1000000
+    } = options;
+
     const supabase = await createClient();
+
     let query = supabase
         .from('products')
-        .select('*')
-        .eq('is_active', true);
+        .select('*', { count: 'exact' })
+        .eq('is_active', true)
+        .gte('price', minPrice)
+        .lte('price', maxPrice);
 
-    if (options.categorySlug) {
+    if (categorySlug) {
         const { data: catData } = await supabase
             .from('categories')
             .select('id')
-            .eq('slug', options.categorySlug)
+            .eq('slug', categorySlug)
             .single();
 
         if (catData) {
@@ -111,14 +130,36 @@ export async function getProducts(options: { categorySlug?: string | null } = {}
         }
     }
 
-    const { data, error } = await query;
+    // Apply Sorting
+    switch (sortBy) {
+        case "price-asc":
+            query = query.order('price', { ascending: true });
+            break;
+        case "price-desc":
+            query = query.order('price', { ascending: false });
+            break;
+        case "newest":
+            query = query.order('created_at', { ascending: false });
+            break;
+        case "popularity":
+            query = query.order('is_featured', { ascending: false }).order('created_at', { ascending: false });
+            break;
+        default:
+            query = query.order('created_at', { ascending: false });
+    }
+
+    const { data, error, count } = await query.range(offset, offset + limit - 1);
 
     if (error) {
         console.error("Error fetching products:", error);
         return { success: false, error: error.message };
     }
 
-    return { success: true, data: data as Product[] };
+    return {
+        success: true,
+        data: data as Product[],
+        totalCount: count || 0
+    };
 }
 
 export async function getProductById(id: string) {

@@ -117,8 +117,13 @@ export function DesktopNavbar() {
                     <div className="flex items-center gap-2 border-l border-border/50 pl-6">
                         {/* Wishlist */}
                         <Link href="/wishlist">
-                            <Button variant="ghost" size="icon" className="group rounded-full hover:bg-primary/5">
+                            <Button variant="ghost" size="icon" className="group rounded-full hover:bg-primary/5 relative">
                                 <Heart className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" />
+                                {isMounted && useStore.getState().wishlistCount() > 0 && (
+                                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-extrabold text-white ring-2 ring-white">
+                                        {useStore.getState().wishlistCount()}
+                                    </span>
+                                )}
                             </Button>
                         </Link>
 

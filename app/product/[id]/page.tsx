@@ -4,6 +4,7 @@ import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductInfo } from "@/components/product/ProductInfo";
 import { RelatedProducts } from "@/components/product/RelatedProducts";
 import { ReviewList } from "@/components/reviews/ReviewList";
+import { RecentlyViewed } from "@/components/product/RecentlyViewed";
 import { notFound } from "next/navigation";
 import { Product } from "@/lib/types";
 import { Metadata } from "next";
@@ -140,11 +141,16 @@ export default async function ProductPage({ params }: ProductPageProps) {
                 </div>
 
                 {/* Related Products Section */}
-                <div className="mt-20 border-t border-secondary/20 pt-20 pb-20 md:pb-0 px-5 md:px-0">
+                <div className="mt-20 border-t border-secondary/20 pt-20 px-5 md:px-0">
                     <RelatedProducts
                         categoryId={typedProduct.category_id}
                         currentProductId={typedProduct.id}
                     />
+                </div>
+
+                {/* Recently Viewed Section */}
+                <div className="mt-10 mb-20 md:mb-10 px-5 md:px-0">
+                    <RecentlyViewed title="You Also Looked At" />
                 </div>
             </div>
         </div>

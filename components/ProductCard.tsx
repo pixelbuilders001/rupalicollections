@@ -136,6 +136,15 @@ export function ProductCard({ product, isWishlisted = false, onRemove }: Product
                         </div>
                     )}
 
+                    {/* Out of Stock Overlay */}
+                    {product.stock === 0 && (
+                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                            <div className="rounded-full bg-white/90 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-black shadow-xl">
+                                Sold Out
+                            </div>
+                        </div>
+                    )}
+
                     {/* Size Picker Overlay */}
                     <AnimatePresence>
                         {showQuickAdd && (
@@ -253,16 +262,21 @@ export function ProductCard({ product, isWishlisted = false, onRemove }: Product
 
                         {/* Integrated Add Button */}
                         <button
-                            disabled={isAdding}
+                            disabled={isAdding || product.stock === 0}
                             onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 handleQuickAdd(e);
                             }}
-                            className="flex h-7 items-center gap-1.5 rounded-full bg-primary px-3 text-[10px] font-black uppercase tracking-wider text-white transition-all hover:bg-black active:scale-95 disabled:opacity-50 shadow-sm"
+                            className={cn(
+                                "flex h-7 items-center gap-1.5 rounded-full px-3 text-[10px] font-black uppercase tracking-wider text-white transition-all shadow-sm",
+                                product.stock === 0 ? "bg-muted text-muted-foreground cursor-not-allowed" : "bg-primary hover:bg-black active:scale-95"
+                            )}
                         >
                             {isAdding ? (
                                 <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                            ) : product.stock === 0 ? (
+                                "Sold Out"
                             ) : (
                                 <>
                                     <Plus className="h-3 w-3" />
