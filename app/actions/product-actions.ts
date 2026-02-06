@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server";
-import { Product } from "@/lib/types";
+import { Product, HeroBanner } from "@/lib/types";
 
 export async function getCategories() {
     const supabase = await createClient();
@@ -176,4 +176,22 @@ export async function searchProductsAction(query: string) {
         console.error("Search error:", error);
         return { success: false, error: error.message };
     }
+}
+
+export async function getHeroBanners() {
+    const supabase = await createClient();
+    const now = new Date().toISOString();
+
+    const { data, error } = await supabase
+        .from('hero_banners')
+        .select('*')
+        .eq('is_active', true)
+        .order('position', { ascending: true });
+
+    if (error) {
+        console.error("Error fetching hero banners:", error);
+        return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data as HeroBanner[] };
 }

@@ -42,9 +42,9 @@ export function ProductGallery({ images = [], thumbnail, productName = "Product"
     }
 
     return (
-        <div className="relative group -mx-4 md:mx-0 flex flex-col gap-4">
+        <div className="relative group flex flex-col gap-4 px-4 md:px-0">
             {/* Main Image Container */}
-            <div className="relative aspect-[3/4] w-full overflow-hidden md:rounded-2xl bg-secondary/5">
+            <div className="relative aspect-[4/5] md:aspect-[3/4] max-h-[60vh] md:max-h-none w-full overflow-hidden rounded-2xl md:rounded-2xl bg-secondary/5">
                 <div
                     ref={scrollRef}
                     onScroll={handleScroll}
@@ -99,13 +99,13 @@ export function ProductGallery({ images = [], thumbnail, productName = "Product"
 
             {/* Thumbnails */}
             {displayImages.length > 1 && (
-                <div className="flex gap-3 px-4 md:px-0 overflow-x-auto no-scrollbar py-2">
+                <div className="flex gap-2 px-4 md:px-0 overflow-x-auto no-scrollbar py-2">
                     {displayImages.map((img, index) => (
                         <button
                             key={index}
                             onClick={() => scrollToImage(index)}
                             className={cn(
-                                "relative aspect-[3/4] w-16 md:w-20 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all active:scale-95",
+                                "relative aspect-[3/4] w-12 md:w-16 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all active:scale-95",
                                 selectedImage === index
                                     ? "border-primary shadow-lg ring-2 ring-primary/10"
                                     : "border-transparent opacity-60 hover:opacity-100 scale-95"

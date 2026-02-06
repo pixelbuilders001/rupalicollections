@@ -9,24 +9,28 @@ import { ProductCard } from "@/components/ProductCard";
 import { categories as fallbackCategories } from "@/lib/data";
 import { useEffect, useState } from "react";
 import { Product } from "@/lib/types";
-import { getCategories, getTrendingProducts, getNewArrivals } from "@/app/actions/product-actions";
+import { getCategories, getTrendingProducts, getNewArrivals, getHeroBanners } from "@/app/actions/product-actions";
 import { useStore } from "@/lib/store";
 import { PWAInstallBanner } from "@/components/common/PWAInstallBanner";
+import { HeroCarousel } from "./HeroCarousel";
 
 export function HomeClient() {
     const [categories, setCategories] = useState<any[]>(fallbackCategories);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
     const [trendingProducts, setTrendingProducts] = useState<Product[]>([]);
     const [newArrivals, setNewArrivals] = useState<Product[]>([]);
+    const [banners, setBanners] = useState<any[]>([]);
     const [productsLoading, setProductsLoading] = useState(true);
+    const [bannersLoading, setBannersLoading] = useState(true);
 
     useEffect(() => {
         const loadHomeData = async () => {
             try {
-                const [categoriesRes, trendingRes, arrivalsRes] = await Promise.all([
+                const [categoriesRes, trendingRes, arrivalsRes, bannersRes] = await Promise.all([
                     getCategories(),
                     getTrendingProducts(4),
-                    getNewArrivals(6)
+                    getNewArrivals(6),
+                    getHeroBanners()
                 ]);
 
                 if (categoriesRes.success && categoriesRes.data) {
@@ -40,11 +44,16 @@ export function HomeClient() {
                 if (arrivalsRes.success && arrivalsRes.data) {
                     setNewArrivals(arrivalsRes.data);
                 }
+
+                if (bannersRes.success && bannersRes.data) {
+                    setBanners(bannersRes.data);
+                }
             } catch (err) {
                 console.error("Error loading home data:", err);
             } finally {
                 setCategoriesLoading(false);
                 setProductsLoading(false);
+                setBannersLoading(false);
             }
         };
 
@@ -64,36 +73,44 @@ export function HomeClient() {
                 </div>
             </div>
 
-            {/* Hero Banner - Compact Mobile Style */}
-            <section className="px-4">
-                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-muted md:aspect-[21/9]">
-                    <Image
-                        src="https://plus.unsplash.com/premium_photo-1682090811844-e0a89fb2c780?q=80&w=1170&auto=format&fit=crop"
-                        alt="New Season Collection - Premium Indian Ethnic Wear"
-                        fill
-                        className="object-cover"
-                        priority
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
-                    <div className="absolute inset-0 flex flex-col justify-center p-6 text-white">
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.6 }}
-                        >
-                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-foreground/80">New Season</span>
-                            <h1 className="mt-1 font-serif text-2xl font-bold md:text-4xl">
-                                Spring / Summer <br /> '24 Collection
-                            </h1>
-                            <Link href="/shop" className="mt-4 block w-fit">
-                                <Button size="sm" className="h-8 rounded-full bg-white px-4 text-[11px] font-bold text-black hover:bg-white/90">
-                                    EXPLORE NOW
-                                </Button>
-                            </Link>
-                        </motion.div>
+            {/* Hero Carousel */}
+            {banners.length > 0 ? (
+                <HeroCarousel banners={banners} />
+            ) : !bannersLoading ? (
+                <section className="px-4">
+                    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-muted md:aspect-[21/9]">
+                        <Image
+                            src="https://plus.unsplash.com/premium_photo-1682090811844-e0a89fb2c780?q=80&w=1170&auto=format&fit=crop"
+                            alt="New Season Collection - Premium Indian Ethnic Wear"
+                            fill
+                            className="object-cover"
+                            priority
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
+                        <div className="absolute inset-0 flex flex-col justify-center p-6 text-white">
+                            <motion.div
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.6 }}
+                            >
+                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-foreground/80">New Season</span>
+                                <h1 className="mt-1 font-serif text-2xl font-bold md:text-4xl">
+                                    Spring / Summer <br /> '24 Collection
+                                </h1>
+                                <Link href="/shop" className="mt-4 block w-fit">
+                                    <Button size="sm" className="h-8 rounded-full bg-white px-4 text-[11px] font-bold text-black hover:bg-white/90">
+                                        EXPLORE NOW
+                                    </Button>
+                                </Link>
+                            </motion.div>
+                        </div>
                     </div>
+                </section>
+            ) : (
+                <div className="px-4">
+                    <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-background md:aspect-[21/9]" />
                 </div>
-            </section>
+            )}
 
             {/* Categories - Story Style (Circle Icons) */}
             <section className="px-4">

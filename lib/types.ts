@@ -115,3 +115,19 @@ export interface ProductReview {
     };
 }
 
+export interface HeroBanner {
+    id: string;
+    title: string;
+    subtitle?: string;
+    image_url: string;
+    mobile_image_url?: string;
+    cta_text?: string;
+    cta_link?: string;
+    position: number;
+    is_active: boolean;
+    start_date?: string;
+    end_date?: string;
+    created_at: string;
+    updated_at: string;
+}
+

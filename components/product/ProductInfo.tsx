@@ -251,7 +251,7 @@ export function ProductInfo({ product, isWishlisted = false }: ProductInfoProps)
     };
 
     return (
-        <div className="flex flex-col gap-8 pb-32 md:pb-0">
+        <div className="flex flex-col gap-5 md:gap-8 pb-32 md:pb-0">
             {/* Header Section */}
             <div>
                 <div className="flex items-center justify-between">
@@ -396,7 +396,7 @@ export function ProductInfo({ product, isWishlisted = false }: ProductInfoProps)
                     </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                {/* <div className="grid grid-cols-2 gap-3">
                     <div className="flex flex-col gap-1.5 rounded-2xl bg-secondary/10 p-4 border border-white/40">
                         <span className="text-[9px] font-black uppercase tracking-[0.15em] text-muted-foreground/60">Fabric</span>
                         <span className="text-[11px] font-black uppercase tracking-tight text-foreground">{product.fabric || "Premium Silk Blend"}</span>
@@ -405,7 +405,7 @@ export function ProductInfo({ product, isWishlisted = false }: ProductInfoProps)
                         <span className="text-[9px] font-black uppercase tracking-[0.15em] text-muted-foreground/60">Care</span>
                         <span className="text-[11px] font-black uppercase tracking-tight text-foreground">Dry Clean Only</span>
                     </div>
-                </div>
+                </div> */}
             </div>
 
             {/* Final Sticky Checkout Bar - Improved for Mobile */}
