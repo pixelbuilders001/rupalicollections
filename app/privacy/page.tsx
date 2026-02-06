@@ -9,8 +9,8 @@ import { BottomNav } from "@/components/layout/BottomNav";
 export default function PrivacyPage() {
     return (
         <div className="min-h-screen bg-background">
-            {/* <Navbar />
-            <DesktopNavbar /> */}
+            <Navbar />
+            <DesktopNavbar />
 
             <main className="container mx-auto px-4 py-12 md:py-24 max-w-4xl">
                 <motion.div

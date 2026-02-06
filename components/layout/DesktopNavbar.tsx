@@ -5,7 +5,7 @@ import Image from "next/image";
 import { ShoppingBag, Search, Heart, User, ChevronDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getCartServerAction } from "@/app/actions/cart-actions";
 import { getWishlistAction } from "@/app/actions/wishlist-actions";
