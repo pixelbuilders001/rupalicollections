@@ -79,11 +79,11 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
                 transition={{ delay: 2 }}
                 className="absolute bottom-10"
             >
-                <div className="flex items-center gap-2 text-xs text-[#C5A059]/60">
+                {/* <div className="flex items-center gap-2 text-xs text-[#C5A059]/60">
                     <span className="h-px w-8 bg-current"></span>
                     <span>EST. 2024</span>
                     <span className="h-px w-8 bg-current"></span>
-                </div>
+                </div> */}
             </motion.div>
         </motion.div>
     );

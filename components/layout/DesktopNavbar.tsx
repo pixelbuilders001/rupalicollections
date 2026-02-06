@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getCartServerAction } from "@/app/actions/cart-actions";
 import { usePathname } from "next/navigation";
 import { GlobalSearch } from "./GlobalSearch";
+import { DesktopGlobalSearch } from "./DesktopGlobalSearch";
 import { cn } from "@/lib/utils";
 import {
     DropdownMenu,
@@ -96,13 +97,24 @@ export function DesktopNavbar() {
                     ))}
                 </nav>
 
-                {/* Search and Actions */}
-                <div className="flex items-center gap-4">
-                    <div className="w-64">
-                        <GlobalSearch showTrigger={false} className="w-full" />
+                {/* Right Side Actions */}
+                <div className="flex items-center gap-6">
+                    {/* Desktop Search Trigger */}
+                    <div className="w-64 xl:w-80">
+                        <button
+                            onClick={() => useStore.getState().setIsDesktopSearchOpen(true)}
+                            className="w-full h-10 px-4 rounded-xl bg-secondary/30 border border-transparent hover:border-primary/20 hover:bg-secondary/50 transition-all flex items-center gap-3 group text-muted-foreground/50"
+                        >
+                            <Search className="h-4 w-4 group-hover:text-primary transition-colors" />
+                            <span className="text-xs font-medium">Search for items...</span>
+                            <div className="ml-auto flex items-center gap-1 opacity-20 group-hover:opacity-100 transition-opacity">
+                                <span className="text-[9px] font-black border rounded px-1.5 py-0.5">/</span>
+                            </div>
+                        </button>
+                        <DesktopGlobalSearch />
                     </div>
 
-                    <div className="flex items-center gap-2 border-l border-border/50 pl-4">
+                    <div className="flex items-center gap-2 border-l border-border/50 pl-6">
                         {/* Wishlist */}
                         <Link href="/wishlist">
                             <Button variant="ghost" size="icon" className="group rounded-full hover:bg-primary/5">
@@ -204,17 +216,17 @@ export function DesktopNavbar() {
                                                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                                                     <User className="h-4 w-4" />
                                                 </div>
-                                                Login
+                                                Login/Signup
                                             </Link>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem asChild className="rounded-xl focus:bg-primary/5 focus:text-foreground cursor-pointer py-2.5 px-3">
+                                        {/* <DropdownMenuItem asChild className="rounded-xl focus:bg-primary/5 focus:text-foreground cursor-pointer py-2.5 px-3">
                                             <Link href="/login?view=signup" className="flex items-center gap-3 font-bold text-sm text-foreground">
                                                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                                                     <User className="h-4 w-4" />
                                                 </div>
                                                 Sign up
                                             </Link>
-                                        </DropdownMenuItem>
+                                        </DropdownMenuItem> */}
                                     </>
                                 )}
                             </DropdownMenuContent>

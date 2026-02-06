@@ -29,7 +29,7 @@ const POPULAR_SEARCHES = [
 
 const RECENT_SEARCHES_KEY = "rupalicollection_recent_searches";
 
-export function GlobalSearch({ showTrigger = true }: { showTrigger?: boolean }) {
+export function GlobalSearch({ showTrigger = true, className }: { showTrigger?: boolean; className?: string }) {
     const isOpen = useStore((state) => state.isSearchOpen);
     const setIsOpen = useStore((state) => state.setIsSearchOpen);
     const [query, setQuery] = useState("");
