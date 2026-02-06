@@ -7,7 +7,7 @@ import { addToCartApi, getCartApi } from "@/lib/services/cart-api";
 /**
  * Adds a product to the cart using Supabase Edge Function.
  */
-export async function addToCartServerAction(productId: string, quantity: number = 1) {
+export async function addToCartServerAction(productId: string, quantity: number = 1, size: string = "One Size") {
     try {
         const supabase = await createClient();
         const { data: { session } } = await supabase.auth.getSession();
@@ -16,7 +16,7 @@ export async function addToCartServerAction(productId: string, quantity: number 
             return { success: false, error: "Not logged in" };
         }
 
-        const result = await addToCartApi(productId, quantity, session.access_token);
+        const result = await addToCartApi(productId, quantity, size, session.access_token);
         return result;
     } catch (error: any) {
         console.error("Add to cart error:", error);

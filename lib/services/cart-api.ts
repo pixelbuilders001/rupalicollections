@@ -2,7 +2,7 @@ const QUICK_ACTION_URL = "https://ehdylnqmhqagxbzrzdig.supabase.co/functions/v1/
 const GET_CART_URL = "https://ehdylnqmhqagxbzrzdig.supabase.co/functions/v1/get-cart";
 const API_KEY = "sb_publishable_YcoICX0IdZ1";
 
-export async function addToCartApi(productId: string, quantity: number = 1, authToken: string) {
+export async function addToCartApi(productId: string, quantity: number = 1, size: string = "One Size", authToken: string) {
     try {
         if (!authToken) {
             console.warn("No auth token provided for Cart API call");
@@ -18,7 +18,8 @@ export async function addToCartApi(productId: string, quantity: number = 1, auth
             },
             body: JSON.stringify({
                 product_id: productId,
-                qty: quantity
+                qty: quantity,
+                size: size
             })
         });
 
