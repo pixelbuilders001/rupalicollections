@@ -70,10 +70,10 @@ export function Footer() {
                                 <Link href="/wishlist" className="text-sm text-muted-foreground hover:text-primary transition-colors">Wishlist</Link>
                             </li>
                             <li>
-                                <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Shipping Policy</Link>
+                                <Link href="/shipping" className="text-sm text-muted-foreground hover:text-primary transition-colors">Shipping Policy</Link>
                             </li>
                             <li>
-                                <Link href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Returns & Exchanges</Link>
+                                <Link href="/returns" className="text-sm text-muted-foreground hover:text-primary transition-colors">Returns & Exchanges</Link>
                             </li>
                         </ul>
                     </div>
@@ -84,7 +84,7 @@ export function Footer() {
                         <ul className="space-y-4">
                             <li className="flex items-start gap-3 text-sm text-muted-foreground">
                                 <MapPin className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                                <span>123 Fashion Street, Ethnic Market,<br />New Delhi, India 110001</span>
+                                <span>Mohanpur road, Samastipur,<br />Bihar, India 848101</span>
                             </li>
                             <li className="flex items-center gap-3 text-sm text-muted-foreground">
                                 <Phone className="h-4 w-4 text-primary shrink-0" />
