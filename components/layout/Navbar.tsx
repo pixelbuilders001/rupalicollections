@@ -8,6 +8,7 @@ import { useStore } from "@/lib/store";
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getCartServerAction } from "@/app/actions/cart-actions";
+import { getWishlistAction } from "@/app/actions/wishlist-actions";
 import { getUserProfile } from "@/app/actions/user-actions";
 import { usePathname } from "next/navigation";
 import { BackButton } from "../common/BackButton";
@@ -19,6 +20,7 @@ export function Navbar() {
     const cartCount = useStore((state) => state.cartCount());
     const setIsLoggedIn = useStore((state) => state.setIsLoggedIn);
     const setCartItems = useStore((state) => state.setCartItems);
+    const setWishlistItems = useStore((state) => state.setWishlistItems);
     const clearCart = useStore((state) => state.clearCart);
     const [isMounted, setIsMounted] = useState(false);
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -30,9 +32,7 @@ export function Navbar() {
     const syncCart = useCallback(async () => {
         const result = await getCartServerAction();
         if (result.success && result.data) {
-            // Handle nested structure: result.data.cart.cart_items or result.data
             const cartItems = result.data.cart?.cart_items || (Array.isArray(result.data) ? result.data : []);
-
             const serverItems = cartItems.map((item: any) => ({
                 ...item.products,
                 cartId: item.id,
@@ -45,6 +45,13 @@ export function Navbar() {
         }
     }, [setCartItems]);
 
+    const syncWishlist = useCallback(async () => {
+        const result = await getWishlistAction();
+        if (result.success && result.data) {
+            setWishlistItems(result.data);
+        }
+    }, [setWishlistItems]);
+
     useEffect(() => {
         setIsMounted(true);
 
@@ -52,7 +59,8 @@ export function Navbar() {
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
                 setIsLoggedIn(true);
-                await syncCart();
+                syncCart();
+                syncWishlist();
             } else {
                 setIsLoggedIn(false);
             }
@@ -70,6 +78,7 @@ export function Navbar() {
                         clearCart();
                     }
                     syncCart();
+                    syncWishlist();
                 }
             } else {
                 setIsLoggedIn(false);

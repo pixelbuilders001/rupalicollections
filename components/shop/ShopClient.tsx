@@ -31,11 +31,10 @@ export function ShopClient() {
     const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(true);
 
-    const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
     const [totalFound, setTotalFound] = useState(0);
-    const LIMIT = 8;
+    const LIMIT = 12;
     const offsetRef = useRef(0);
 
     useEffect(() => {
@@ -81,7 +80,11 @@ export function ShopClient() {
                     setProductsList(result.data);
                     offsetRef.current = result.data.length;
                 } else {
-                    setProductsList(prev => [...prev, ...result.data]);
+                    setProductsList(prev => {
+                        const existingIds = new Set(prev.map(p => p.id));
+                        const newItems = (result.data || []).filter(p => !existingIds.has(p.id));
+                        return [...prev, ...newItems];
+                    });
                     offsetRef.current += result.data.length;
                 }
                 setHasMore(result.data.length === LIMIT);

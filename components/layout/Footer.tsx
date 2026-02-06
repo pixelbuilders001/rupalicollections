@@ -104,8 +104,8 @@ export function Footer() {
                         © {new Date().getFullYear()} Rupali Collection. All rights reserved.
                     </p>
                     <div className="flex items-center gap-6">
-                        <Link href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link>
-                        <Link href="#" className="text-xs text-muted-foreground hover:text-primary transition-colors">Terms of Service</Link>
+                        <Link href="/privacy" className="text-xs text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link>
+                        <Link href="/terms" className="text-xs text-muted-foreground hover:text-primary transition-colors">Terms of Service</Link>
                     </div>
                 </div>
             </div>

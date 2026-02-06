@@ -13,6 +13,7 @@ interface CartState {
     removeFromWishlist: (productId: string) => void;
     isInWishlist: (productId: string) => boolean;
     setCartItems: (items: CartItem[]) => void;
+    setWishlistItems: (items: Product[]) => void;
     cartTotal: () => number;
     cartCount: () => number;
     wishlistCount: () => number;
@@ -98,6 +99,10 @@ export const useStore = create<CartState>()(
                 return get().wishlist.some((item) => item.id === productId);
             },
             setCartItems: (items) => set({ items }),
+            setWishlistItems: (items) => {
+                const uniqueItems = Array.from(new Map(items.map(item => [item.id, item])).values());
+                set({ wishlist: uniqueItems });
+            },
             cartTotal: () => {
                 return get().items.reduce((total, item) => total + item.price * item.quantity, 0);
             },

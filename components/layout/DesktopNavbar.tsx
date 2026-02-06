@@ -8,6 +8,7 @@ import { useStore } from "@/lib/store";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { getCartServerAction } from "@/app/actions/cart-actions";
+import { getWishlistAction } from "@/app/actions/wishlist-actions";
 import { usePathname } from "next/navigation";
 import { GlobalSearch } from "./GlobalSearch";
 import { DesktopGlobalSearch } from "./DesktopGlobalSearch";
@@ -24,6 +25,9 @@ import {
 export function DesktopNavbar() {
     const cartCount = useStore((state) => state.cartCount());
     const setIsLoggedIn = useStore((state) => state.setIsLoggedIn);
+    const setIsSearchOpen = useStore((state) => state.setIsSearchOpen);
+    const setCartItems = useStore((state) => state.setCartItems);
+    const setWishlistItems = useStore((state) => state.setWishlistItems);
     const isLoggedIn = useStore((state) => state.isLoggedIn);
     const userProfile = useStore((state) => state.userProfile);
     const [isMounted, setIsMounted] = useState(false);
@@ -31,14 +35,72 @@ export function DesktopNavbar() {
     const supabase = createClient();
     const pathname = usePathname();
 
+    const syncCart = useCallback(async () => {
+        const result = await getCartServerAction();
+        if (result.success && result.data) {
+            const cartItems = result.data.cart?.cart_items || (Array.isArray(result.data) ? result.data : []);
+            const serverItems = cartItems.map((item: any) => ({
+                ...item.products,
+                cartId: item.id,
+                quantity: item.qty,
+                price: item.price,
+                selectedSize: item.size || "One Size",
+                id: item.product_id
+            }));
+            setCartItems(serverItems);
+        }
+    }, [setCartItems]);
+
+    const syncWishlist = useCallback(async () => {
+        const result = await getWishlistAction();
+        if (result.success && result.data) {
+            setWishlistItems(result.data);
+        }
+    }, [setWishlistItems]);
+
     useEffect(() => {
         setIsMounted(true);
+
+        const initAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                setIsLoggedIn(true);
+                syncCart();
+                syncWishlist();
+            } else {
+                setIsLoggedIn(false);
+            }
+        };
+
+        initAuth();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (session?.user) {
+                setIsLoggedIn(true);
+                if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+                    if (event === 'SIGNED_IN') {
+                        useStore.getState().clearCart();
+                    }
+                    syncCart();
+                    syncWishlist();
+                }
+            } else {
+                setIsLoggedIn(false);
+                if (event === 'SIGNED_OUT') {
+                    useStore.getState().clearCart();
+                }
+            }
+        });
+
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 20);
         };
         window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+            subscription.unsubscribe();
+        };
+    }, [supabase, syncCart, syncWishlist, setIsLoggedIn]);
 
     const navLinks = [
         { href: "/", label: "Home" },

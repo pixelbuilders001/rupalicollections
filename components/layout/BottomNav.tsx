@@ -10,17 +10,26 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import { getUserProfile } from "@/app/actions/user-actions";
+import { getWishlistAction } from "@/app/actions/wishlist-actions";
 
 export function BottomNav() {
     const pathname = usePathname();
     const cartCount = useStore((state) => state.cartCount());
     const userProfile = useStore((state) => state.userProfile);
     const setUserProfile = useStore((state) => state.setUserProfile);
+    const setWishlistItems = useStore((state) => state.setWishlistItems);
     const [isMounted, setIsMounted] = useState(false);
     const supabase = createClient();
 
     useEffect(() => {
         setIsMounted(true);
+
+        const syncWishlist = async () => {
+            const result = await getWishlistAction();
+            if (result.success && result.data) {
+                setWishlistItems(result.data);
+            }
+        };
 
         const initAuth = async () => {
             const result = await getUserProfile();
@@ -29,6 +38,7 @@ export function BottomNav() {
                     name: result.data.name,
                     avatar_url: result.data.avatar_url || null
                 });
+                syncWishlist();
             }
         };
 
@@ -48,6 +58,7 @@ export function BottomNav() {
                         avatar_url: session.user.user_metadata?.avatar_url || null
                     });
                 }
+                syncWishlist();
             } else {
                 setUserProfile(null);
             }
