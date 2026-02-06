@@ -178,7 +178,7 @@ export default function AccountPage() {
         { icon: MapPin, label: "Addresses", desc: "Manage delivery addresses", href: "/addresses", color: "text-green-600", bg: "bg-green-50" },
         // { icon: CreditCard, label: "Payments", desc: "Manage payment methods", href: "/payments", color: "text-purple-600", bg: "bg-purple-50" },
         // { icon: Bell, label: "Notifications", desc: "Offers and updates", href: "/notifications", color: "text-amber-600", bg: "bg-amber-50" },
-        { icon: Settings, label: "Settings", desc: "Profile and security", href: "/settings", color: "text-slate-600", bg: "bg-slate-50" },
+        // { icon: Settings, label: "Settings", desc: "Profile and security", href: "/settings", color: "text-slate-600", bg: "bg-slate-50" },
     ];
 
     if (loading) {

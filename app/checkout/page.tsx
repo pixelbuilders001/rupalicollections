@@ -232,23 +232,78 @@ export default function CheckoutPage() {
 
     if (isSuccess) {
         return (
-            <div className="container mx-auto flex min-h-[70vh] flex-col items-center justify-center px-4 text-center">
-                <motion.div
-                    initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="mb-6 rounded-full bg-green-100 p-6 text-green-600"
-                >
-                    <CheckCircle2 className="h-16 w-16" />
-                </motion.div>
-                <h1 className="font-serif text-2xl font-bold">Order Placed Successfully!</h1>
-                <p className="mt-3 text-muted-foreground max-w-md text-base">
-                    Thank you for shopping with Rupali Collection. Your order #RC-{Math.floor(100000 + Math.random() * 900000)} has been confirmed and will be dispatched soon.
-                </p>
-                <Link href="/" className="mt-8">
-                    <Button size="lg" className="px-6 py-4 text-base rounded-full shadow-md hover:shadow-lg transition-all">
-                        Continue Shopping
-                    </Button>
-                </Link>
+            <div className="container mx-auto flex min-h-[85vh] flex-col items-center justify-center px-4 pt-10 pb-20">
+                <div className="max-w-md w-full bg-white rounded-[3rem] border border-white/40 shadow-2xl p-8 text-center relative overflow-hidden backdrop-blur-sm">
+                    {/* Decorative Background Elements */}
+                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-green-500/5 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+
+                    <motion.div
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", damping: 15, stiffness: 200 }}
+                        className="mb-8 relative inline-block"
+                    >
+                        <div className="relative z-10 rounded-[2rem] bg-green-500 p-8 text-white shadow-xl shadow-green-500/20">
+                            <Check className="h-12 w-12 stroke-[3px]" />
+                        </div>
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1.2, opacity: 0.3 }}
+                            transition={{ repeat: Infinity, duration: 2, repeatType: "reverse" }}
+                            className="absolute inset-0 bg-green-500 rounded-[2rem] -z-10"
+                        />
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                    >
+                        <h1 className="font-serif text-3xl font-black text-foreground mb-4">Confirmed!</h1>
+                        <p className="text-muted-foreground text-sm font-medium leading-relaxed px-4">
+                            Your ethnic elegance is on its way. We've received your order and are preparing it with care.
+                        </p>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="mt-8 bg-secondary/20 rounded-2xl p-4 border border-black/5"
+                    >
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-1">Order Reference</p>
+                        <p className="text-base font-bold font-mono text-primary">RC-{Math.floor(100000 + Math.random() * 900000)}</p>
+                    </motion.div>
+
+                    <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                        className="mt-10 flex flex-col gap-3"
+                    >
+                        <Link href="/orders" className="w-full">
+                            <Button size="lg" className="w-full h-14 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-[0.98]">
+                                <Truck className="mr-2 h-4 w-4" /> Track Order Status
+                            </Button>
+                        </Link>
+
+                        <Link href="/" className="w-full">
+                            <Button size="lg" variant="outline" className="w-full h-14 rounded-2xl text-[11px] font-black uppercase tracking-widest border-2 transition-all active:scale-[0.98]">
+                                <ShoppingBag className="mr-2 h-4 w-4" /> Continue Shopping
+                            </Button>
+                        </Link>
+                    </motion.div>
+
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 0.5 }}
+                        transition={{ delay: 0.6 }}
+                        className="mt-8 text-[9px] font-black uppercase tracking-widest text-muted-foreground"
+                    >
+                        Thank you for choosing Rupali Collection
+                    </motion.p>
+                </div>
             </div>
         )
     }
