@@ -109,6 +109,8 @@ export interface ProductReview {
     status: 'pending' | 'approved' | 'rejected';
     created_at: string;
     updated_at: string;
+    likes?: number;
+    dislikes?: number;
     user?: {
         full_name: string;
         avatar_url?: string;

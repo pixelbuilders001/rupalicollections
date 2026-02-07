@@ -1,5 +1,6 @@
 import { getProductReviews } from '@/app/actions/reviews'
 import { Star } from 'lucide-react'
+import { ReviewReactions } from './ReviewReactions'
 
 interface ReviewListProps {
     productId: string
@@ -74,6 +75,12 @@ export async function ReviewList({ productId }: ReviewListProps) {
                         <h4 className="font-medium mb-1">{review.title}</h4>
 
                         <p className="text-gray-600">{review.review}</p>
+
+                        <ReviewReactions
+                            reviewId={review.id}
+                            initialLikes={review.likes || 0}
+                            initialDislikes={review.dislikes || 0}
+                        />
                     </div>
                 ))}
             </div>

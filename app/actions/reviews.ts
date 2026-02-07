@@ -137,3 +137,45 @@ export async function getUserReviews() {
 
     return reviews as ProductReview[];
 }
+
+export async function toggleReviewReaction(reviewId: string, type: 'like' | 'dislike') {
+    const supabase = await createClient();
+
+    // For now, based on "anyone can like and dislike", we'll just increment the count.
+    // Ideally we would have a separate table for review_reactions to prevent spam.
+
+    const column = type === 'like' ? 'likes' : 'dislikes';
+
+    // We can use rpc or just fetch and update. Since we don't have custom RPCs easily available, 
+    // and this is a simple "increment", we'll do it via update.
+    // Note: This is prone to race conditions if many people click at exactly the same time, 
+    // but for this implementation it should suffice.
+
+    const { data: review, error: fetchError } = await supabase
+        .from('product_reviews')
+        .select(column)
+        .eq('id', reviewId)
+        .single();
+
+    if (fetchError) {
+        console.error('Error fetching review counts:', fetchError);
+        return { error: 'Failed to update reaction' };
+    }
+
+    const currentValue = (review as any)[column] || 0;
+
+    const { data: updateData, error } = await supabase
+        .from('product_reviews')
+        .update({ [column]: currentValue + 1 })
+        .eq('id', reviewId)
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Error updating review reaction:', error);
+        return { error: 'Failed to update reaction' };
+    }
+
+    return { success: true, [column]: (updateData as any)[column] };
+}
+
