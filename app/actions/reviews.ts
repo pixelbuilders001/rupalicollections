@@ -138,7 +138,7 @@ export async function getUserReviews() {
     return reviews as ProductReview[];
 }
 
-export async function toggleReviewReaction(reviewId: string, type: 'like' | 'dislike') {
+export async function toggleReviewReaction(reviewId: string, type: 'like' | 'dislike', action: 'inc' | 'dec' = 'inc') {
     const supabase = await createClient();
 
     // For now, based on "anyone can like and dislike", we'll just increment the count.
@@ -163,10 +163,11 @@ export async function toggleReviewReaction(reviewId: string, type: 'like' | 'dis
     }
 
     const currentValue = (review as any)[column] || 0;
+    const newValue = action === 'inc' ? currentValue + 1 : Math.max(0, currentValue - 1);
 
     const { data: updateData, error } = await supabase
         .from('product_reviews')
-        .update({ [column]: currentValue + 1 })
+        .update({ [column]: newValue })
         .eq('id', reviewId)
         .select()
         .single();
